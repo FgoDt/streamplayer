@@ -48,15 +48,5 @@ extern "C" _DLLEXPORT int BSPDSetLogCallback(BSPDContext *bspdctx,BSPDLogCallbac
 
 
 
-extern "C" _DLLEXPORT void  getctx(MCtx *ctx);
-extern "C" _DLLEXPORT  MCtx* createctx();
-
-typedef void(__stdcall *CTCallback)(int tick);
-
-//extern "C" _declspec(dllexport) int open(char *input, char *options);
-
-extern "C" void _DLLEXPORT setcallback(CTCallback callback);
-
-extern "C" _DLLEXPORT long long dlltest();
 
 #endif // ! __BSPD_H__

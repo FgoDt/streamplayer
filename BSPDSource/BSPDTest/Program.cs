@@ -34,14 +34,6 @@ namespace BSPDTest
             public BSPDLogCallback logCallback;
         }
 
-        //[DllImport("BSPD")]
-        //private static extern long dlltest();
-
-        //[DllImport("BSPD")]
-        //private static extern long getctx(ref MCTx cTx);
-
-        //[DllImport("BSPD")]
-        //private static extern IntPtr createctx();
 
         [DllImport("BSPD")]
         private static extern IntPtr BSPDCreateCtx();
