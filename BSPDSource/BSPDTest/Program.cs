@@ -20,8 +20,8 @@ namespace BSPDTest
         struct BSPDContext
         {
             public IntPtr   pCoder;
-            public IntPtr   inputPath;
-            public IntPtr   optiongs;
+            public string   inputPath;
+            public IntPtr   options;
             public int codedWidth;
             public int codedHeight;
             public int width;
@@ -31,16 +31,17 @@ namespace BSPDTest
             public int timeStamp;
             public int vFps;
             public int vDuration;
+            public BSPDLogCallback logCallback;
         }
 
-        [DllImport("BSPD")]
-        private static extern long dlltest();
+        //[DllImport("BSPD")]
+        //private static extern long dlltest();
 
-        [DllImport("BSPD")]
-        private static extern long getctx(ref MCTx cTx);
+        //[DllImport("BSPD")]
+        //private static extern long getctx(ref MCTx cTx);
 
-        [DllImport("BSPD")]
-        private static extern IntPtr createctx();
+        //[DllImport("BSPD")]
+        //private static extern IntPtr createctx();
 
         [DllImport("BSPD")]
         private static extern IntPtr BSPDCreateCtx();
@@ -51,33 +52,52 @@ namespace BSPDTest
         [DllImport("BSPD")]
         private static extern int BSPDClose(IntPtr ctx);
 
+        [DllImport("BSPD")]
+        private static extern int BSPDOpen(IntPtr ctx, string input, string options);
+
+        [DllImport("BSPD")]
+        private static extern int BSPDGetYUV(IntPtr ctx, byte[] ydata, byte[] udata, byte[] vdata);
+
         static void LogCallbackFunc(string log)
         {
             Console.Write(log);
         }
 
+        static string yuvfilepath = "./test.yuv";
+        //static string input = "http://127.0.0.1/vod/abc.flv";
+        static string input = "rtmp://hk1.6167683.com/LiveT101/LDT5";
         static void Main(string[] args)
         {
 
             IntPtr bspdctx = BSPDCreateCtx();
 
             BSPDSetLogCallback(bspdctx, LogCallbackFunc);
+            BSPDOpen(bspdctx, input, null);
 
-            try
-            {
-                BSPDClose(bspdctx);
-            }
-            catch
-            {
-            }
+            var ctx = (BSPDContext)Marshal.PtrToStructure(bspdctx, typeof(BSPDContext));
+
+            byte[] ydata = new byte[ctx.ysize];
+            byte[] udata = new byte[ctx.ysize/4];
+            byte[] vdata = new byte[ctx.ysize/4];
+
+            var yuvfile =  System.IO.File.Open(yuvfilepath, System.IO.FileMode.OpenOrCreate);
 
             int i = 0;
-            while (i < 1000)
+            while (BSPDGetYUV(bspdctx,ydata,udata,vdata)==0&&i<100)
             {
-                BSPDClose(bspdctx);
-                System.Threading.Thread.Sleep(3);
+                if (yuvfile!= null)
+                {
+                    yuvfile.Write(ydata, 0, ydata.Length);
+                    yuvfile.Write(udata, 0, udata.Length);
+                    yuvfile.Write(vdata, 0, vdata.Length);
+                }
                 i++;
             }
+
+            yuvfile.Flush();
+            yuvfile.Close();
+
+            BSPDClose(bspdctx);
 
         }
     }

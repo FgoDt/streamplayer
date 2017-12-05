@@ -21,12 +21,30 @@
     <ClCompile Include="bspd_coder.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="bspd_mutex.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bspd_sem.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bspd_cond.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSPD.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="bspd_coder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bspd_mutex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bspd_cond.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bspd_sem.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

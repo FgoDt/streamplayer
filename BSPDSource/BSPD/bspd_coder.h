@@ -9,7 +9,8 @@
 #include <libavformat\avformat.h>
 #include <libavutil\imgutils.h>
 #include <libswscale\swscale.h>
-
+#include "bspd_mutex.h"
+#include "bspd_cond.h"
 
 
 /**
@@ -50,6 +51,28 @@ typedef	struct {
 	int				fVIndex;//first video stream index
 	int				initDone;
 }BSPDCoder;
+
+typedef struct {
+	AVFrame         *pYuvData;
+	int             size;
+	int             width;
+	int             height;
+	int             cwidth;
+	int             cheight;
+	double          pts;
+}BSPDFrameData;
+
+#define QUEUE_SIZE 10
+typedef struct BSPDFrameQueue {
+	BSPDFrameData   queue[QUEUE_SIZE];
+    int             max_size;
+    int             size;
+    int             rindex;
+    int             windex;
+    int             rindex_show;
+    BSPDMutex       *mutex;
+    BSPDCond        *cond;
+}BSPDFrameQueue;
 
  /**
  * BSPD context

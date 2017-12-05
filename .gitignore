@@ -1,3 +1,16 @@
+# vslog vscache
+*.log
+*.tlog
+*.cache
+*.def
+BSPDSource/BSPDTest/obj/
+BSPDSource/BSPDTest/bin/
+BSPDSource/BSPDTest/Debug/
+BSPDSource/BSPDTest/x64/
+BSPDSource/BSPD/Debug/
+BSPDSource/BSPD/x64/
+BSPDSource/.vs/
+
 # Prerequisites
 *.d
 

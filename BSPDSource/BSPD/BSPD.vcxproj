@@ -75,8 +75,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\BSP\BSPWindows\ffmpeg-3.4-win64-dev\ffmpeg-3.4-win64-dev\include;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\BSP\BSPWindows\ffmpeg-3.4-win64-dev\ffmpeg-3.4-win64-dev\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\ThirdPartyLibs\FFmpeg\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\ThirdPartyLibs\FFmpeg\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -110,6 +111,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>avcodec.lib;avformat.lib;swscale.lib;avutil.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -154,10 +156,16 @@
       </PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="bspd_coder.c" />
+    <ClCompile Include="bspd_cond.c" />
+    <ClCompile Include="bspd_mutex.c" />
+    <ClCompile Include="bspd_sem.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSPD.h" />
     <ClInclude Include="bspd_coder.h" />
+    <ClInclude Include="bspd_cond.h" />
+    <ClInclude Include="bspd_mutex.h" />
+    <ClInclude Include="bspd_sem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
