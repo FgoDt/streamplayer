@@ -65,7 +65,7 @@ namespace BSPDTest
 
         static string yuvfilepath = "./test.yuv";
         //static string input = "http://127.0.0.1/vod/abc.flv";
-        static string input = "rtmp://hk1.6167683.com/LiveT101/LDT5";
+        static string input = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
         static void Main(string[] args)
         {
 
