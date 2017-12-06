@@ -32,6 +32,9 @@ extern "C" _DLLEXPORT int BSPDOpen(BSPDContext *ctx ,char *input, char *options)
  */
 extern "C" _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vdata);
 
+extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration);
+
+
 /**
  * ¹Ø±ÕBSPD
  */

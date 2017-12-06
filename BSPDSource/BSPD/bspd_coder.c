@@ -155,7 +155,7 @@ int bc_init_coder(BSPDContext *ctx) {
 	}
 
     //// fix me use options
-    ctx->pCoder->pFormatCtx->probesize = 100 * 1024;
+    ctx->pCoder->pFormatCtx->probesize =  32;
     /////
 
 	if (avformat_open_input(&ctx->pCoder->pFormatCtx,ctx->inputPath,NULL,NULL)!=0)
@@ -307,12 +307,17 @@ int bc_get_yuv(BSPDContext *ctx) {
                 ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
 
             ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
+            ctx->timeStamp = ctx->pCoder->pFrame->pts;
+            ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+            av_packet_unref(ctx->pCoder->packet);
+            bc_log(ctx, BSPD_LOG_DEBUG, "get yuv data\n");
             return BSPD_OP_OK;
         }
 
         av_packet_unref(ctx->pCoder->packet);
 
     }
+    av_packet_unref(ctx->pCoder->packet);
 
 	return BSPD_ERRO_UNDEFINE;
 }
@@ -343,25 +348,22 @@ int bc_close(BSPDContext *ctx) {
         avformat_close_input(&ctx->pCoder->pFormatCtx);
     }
 
-    if (ctx->pCoder)
-    {
-        free(ctx->pCoder);
-    }
-
-    if (ctx)
-    {
-        free(ctx);
-    }
+  
 
 	return BSPD_OP_OK;
 }
 
 
-__inline char * timeString() {
+__inline char * timeString(clock_t *start_clock) {
 	time_t t;
 	time(&t);
 	clock_t cput;
 	cput = clock();
+    if (start_clock != NULL && *start_clock == -1)
+    {
+        *start_clock = cput;
+    }
+    cput = cput - *start_clock;
 	struct tm * timeinfo = localtime(&t);
 	static char timeStr[30];
 	sprintf(timeStr, "[%.2d-%.2d %.2d:%.2d:%.2d] [ptime: %ld]", timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, cput );
@@ -382,7 +384,7 @@ int bc_log(BSPDContext *ctx,int LEVEL,const char *fmt, ...)
 
 	char str[MAX_PRINT_LEN] = "";
 
-	char *timestr = timeString();
+	char *timestr = timeString(&ctx->pCoder->start_clock);
 	size_t tstrLen = strlen(timestr);
 	tstrLen = tstrLen > MAX_PRINT_LEN - tstrLen ? MAX_PRINT_LEN - tstrLen : tstrLen;
 	memcpy(str, timestr, tstrLen);

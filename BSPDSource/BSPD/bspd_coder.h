@@ -50,6 +50,7 @@ typedef	struct {
 	int				LOGLEVEL;
 	int				fVIndex;//first video stream index
 	int				initDone;
+    clock_t         start_clock;
 }BSPDCoder;
 
 typedef struct {
@@ -99,11 +100,11 @@ typedef	struct {
 	//操作返回code
 	int				opcode;
 	//frame 时间戳
-	int				timeStamp;
+	int64_t			timeStamp;
 	//video fps
-	int				vFps;
+	int             vFps;
 	//video duration 
-	int				vDuration;
+	int64_t         vDuration;
 
 	BSPDLogCallback	logCallback;
 }BSPDContext;

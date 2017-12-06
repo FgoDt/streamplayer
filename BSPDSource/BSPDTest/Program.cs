@@ -50,6 +50,9 @@ namespace BSPDTest
         [DllImport("BSPD")]
         private static extern int BSPDGetYUV(IntPtr ctx, byte[] ydata, byte[] udata, byte[] vdata);
 
+        [DllImport("BSPD")]
+        private static extern int BSPDGetYUVWithTime(IntPtr ctx, byte[] ydata, byte[] udata, byte[] vdata,ref long vpts,ref long apts,ref long vduration ,ref long aduration);
+
         static void LogCallbackFunc(string log)
         {
             Console.Write(log);
@@ -57,6 +60,7 @@ namespace BSPDTest
 
         static string yuvfilepath = "./test.yuv";
         //static string input = "http://127.0.0.1/vod/abc.flv";
+        //static string input = "http://127.0.0.1/vod/test.ogv";
         static string input = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
         static void Main(string[] args)
         {
@@ -72,24 +76,27 @@ namespace BSPDTest
             byte[] udata = new byte[ctx.ysize/4];
             byte[] vdata = new byte[ctx.ysize/4];
 
+            long vpst =0, vdurations =0;
+
             var yuvfile =  System.IO.File.Open(yuvfilepath, System.IO.FileMode.OpenOrCreate);
 
+            BSPDGetYUVWithTime(bspdctx, ydata, udata, vdata, ref vpst, ref vpst, ref vdurations, ref vdurations);
             int i = 0;
             while (BSPDGetYUV(bspdctx,ydata,udata,vdata)==0&&i<100)
             {
-                if (yuvfile!= null)
-                {
-                    yuvfile.Write(ydata, 0, ydata.Length);
-                    yuvfile.Write(udata, 0, udata.Length);
-                    yuvfile.Write(vdata, 0, vdata.Length);
-                }
+                //if (yuvfile!= null)
+                //{
+                //    yuvfile.Write(ydata, 0, ydata.Length);
+                //    yuvfile.Write(udata, 0, udata.Length);
+                //    yuvfile.Write(vdata, 0, vdata.Length);
+                //}
                 i++;
             }
+           BSPDClose(bspdctx);
 
             yuvfile.Flush();
             yuvfile.Close();
 
-            BSPDClose(bspdctx);
 
         }
     }
