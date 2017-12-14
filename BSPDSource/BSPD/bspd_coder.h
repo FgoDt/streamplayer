@@ -120,6 +120,8 @@ int bc_get_yuv(BSPDContext *ctx);
 
 int bc_close(BSPDContext *ctx);
 
+int bc_test();
+
 /**
  * bc log 
  * 使用bc log 来输出log 日志

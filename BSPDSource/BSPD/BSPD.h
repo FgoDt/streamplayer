@@ -16,6 +16,8 @@ typedef struct {
 
 
 
+extern "C" _DLLEXPORT void BSPDTest();
+
 
 /**
  *
@@ -34,6 +36,7 @@ extern "C" _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udat
 
 extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration);
 
+extern "C" _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 
 /**
  * ¹Ø±ÕBSPD

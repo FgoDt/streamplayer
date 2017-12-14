@@ -1,8 +1,47 @@
 #include "bspd_coder.h"
 #include <time.h>
+#include <libavutil\time.h>
 
 #define MAX_PRINT_LEN 2048
 
+typedef struct BSPDPacketList {
+    AVPacket pkt;
+    struct BSPDPacketList *next;
+    int serial;
+}BSPDPacketList;
+
+typedef struct PacketQueue {
+    BSPDPacketList *first_pkt, *last_pkt;
+    int nb_packets;
+    int size;
+    int64_t duration;
+    int abort_request;
+    int serial;
+    BSPDMutex *mutex;
+    BSPDCond *cond;
+}PacketQueue;
+
+
+int bspd_packet_queue_put_private(PacketQueue *q, AVPacket *pkt) {
+    BSPDPacketList *pkt1;
+    if (q->abort_request)
+    {
+        return -1;
+    }
+
+    pkt1 = av_malloc(sizeof(BSPDPacketList));
+    if (!pkt1)
+    {
+        return -1;
+    }
+
+    pkt1->pkt = *pkt;
+    pkt1->next = NULL;
+  /*  if (pkt == &fl)
+    {
+
+    }*/
+}
 
 int bspd_init_queue(BSPDFrameQueue *q,int max_size) {
     if (q==NULL)
@@ -187,7 +226,14 @@ int bc_init_coder(BSPDContext *ctx) {
 		return BSPD_AVLIB_ERROR;
 	}
 
-	ctx->pCoder->pCodecCtx = ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codec;
+    ctx->pCoder->pCodecCtx = avcodec_alloc_context3(NULL);
+	//ctx->pCoder->pCodecCtx = ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codec;
+    int ret = avcodec_parameters_to_context(ctx->pCoder->pCodecCtx, ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codecpar);
+    if (ret<0)
+    {
+		bc_log(ctx, BSPD_LOG_ERROR, "codec ctx parse error\n");
+        return BSPD_AVLIB_ERROR;
+    }
 	ctx->pCoder->pCodec = avcodec_find_decoder(ctx->pCoder->pCodecCtx->codec_id);
 
 	if (ctx->pCoder->pCodec == NULL)
@@ -217,7 +263,7 @@ int bc_init_coder(BSPDContext *ctx) {
 		return BSPD_NO_MEMY;
 	}
 
-	ctx->pCoder->pBuf = (unsigned char *)av_malloc(av_image_get_buffer_size(
+	ctx->pCoder->pBuf = (unsigned char *)malloc(av_image_get_buffer_size(
 		AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height, 1));
 
 	if (ctx->pCoder->pBuf == NULL)
@@ -243,7 +289,7 @@ int bc_init_coder(BSPDContext *ctx) {
 		return BSPD_AVLIB_ERROR;
 	}
 
-	ctx->pCoder->packet = (AVPacket*)malloc(sizeof(AVPacket));
+    ctx->pCoder->packet = av_packet_alloc();
 	if (ctx->pCoder->packet == NULL)
 	{
 		bc_log(ctx, BSPD_LOG_ERROR, "malloc pcoder packet error \n");
@@ -323,31 +369,53 @@ int bc_get_yuv(BSPDContext *ctx) {
 }
 
 int bc_close(BSPDContext *ctx) {
+
+
+
+
     if (ctx->pCoder->pFrame)
     {
+        av_frame_unref(ctx->pCoder->pFrame);
         av_frame_free(&ctx->pCoder->pFrame);
     }
 
     if (ctx->pCoder->pFrameYUV)
     {
+        av_frame_unref(ctx->pCoder->pFrameYUV);
         av_frame_free(&ctx->pCoder->pFrameYUV);
     }
+    if (ctx->pCoder->packet)
+    {
+        av_packet_unref(ctx->pCoder->packet);
+        av_packet_free(&ctx->pCoder->packet);
+    }
+
 
     if (ctx->pCoder->imgSwsCtx)
     {
         sws_freeContext(ctx->pCoder->imgSwsCtx);
     }
 
+   
+
     if (ctx->pCoder->pCodecCtx)
     {
         avcodec_close(ctx->pCoder->pCodecCtx);
+        avcodec_free_context(&ctx->pCoder->pCodecCtx);
+        
     }
 
     if (ctx->pCoder->pFormatCtx)
     {
         avformat_close_input(&ctx->pCoder->pFormatCtx);
+        avformat_free_context(ctx->pCoder->pFormatCtx);
     }
 
+ 
+    if (ctx->pCoder->pBuf)
+    {
+       free(ctx->pCoder->pBuf);
+    }
   
 
 	return BSPD_OP_OK;
@@ -365,13 +433,18 @@ __inline char * timeString(clock_t *start_clock) {
     }
     cput = cput - *start_clock;
 	struct tm * timeinfo = localtime(&t);
-	static char timeStr[30];
+	static char timeStr[100];
+    //av_gettime_relative();
 	sprintf(timeStr, "[%.2d-%.2d %.2d:%.2d:%.2d] [ptime: %ld]", timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, cput );
 	return timeStr;
 }
 
 int bc_log(BSPDContext *ctx,int LEVEL,const char *fmt, ...) 
 {
+    if (ctx == NULL)
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
 	if (LEVEL < ctx->pCoder->LOGLEVEL)
 	{
 		return BSPD_OP_OK;
@@ -406,4 +479,10 @@ int bc_log(BSPDContext *ctx,int LEVEL,const char *fmt, ...)
 	}
 
 	return BSPD_OP_OK;
+}
+
+int bc_test() {
+    BSPDFrameQueue *q = malloc(sizeof(BSPDFrameQueue));
+    bspd_init_queue(q, 10);
+    return BSPD_OP_OK;
 }
