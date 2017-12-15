@@ -38,6 +38,21 @@ extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, 
 
 extern "C" _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 
+
+/**
+ * 新思路 可以对音视频分开解码
+ **/
+
+extern "C" _DLLEXPORT BSPDPacketData* BSPDCreatePacket(BSPDContext *bspdctx,int *opcode);
+
+extern "C" _DLLEXPORT int BSPDGetPacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
+
+extern "C" _DLLEXPORT int BSPDDecodePacketV(BSPDContext *bspdctx,BSPDPacketData *pkt);
+
+extern "C" _DLLEXPORT int BSPDDecodePacketA(BSPDContext *bspdctx,BSPDPacketData *pkt);
+
+extern "C" _DLLEXPORT int BSPDFreePacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
+
 /**
  * 关闭BSPD
  */

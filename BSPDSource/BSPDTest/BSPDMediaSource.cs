@@ -56,6 +56,12 @@ namespace BSPDTest
         [DllImport("BSPD")]
         private static extern int BSPDGetYUVWithTime(IntPtr ctx, byte[] ydata, byte[] udata, byte[] vdata, ref long vpts, ref long apts, ref long vduration, ref long aduration);
 
+        [DllImport("BSPD")]
+        private static extern int BSPDGetPacket(IntPtr ctx, IntPtr pkt);
+
+        [DllImport("BSPD")]
+        private static extern IntPtr BSPDCreatePacket(IntPtr ctx, ref int op);
+
         static void LogCallbackFunc(string log)
         {
             Console.Write(log);
@@ -156,8 +162,18 @@ namespace BSPDTest
 
             mBSPDCtx = BSPDCreateCtx();
             GC.SuppressFinalize(mBSPDCtx);
-         //   BSPDSetLogCallback(mBSPDCtx, LogCallbackFunc);
             BSPDOpen(mBSPDCtx, PATH, "");
+
+            int op = 123;
+            IntPtr pkt = BSPDCreatePacket(mBSPDCtx, ref op);
+            op = BSPDGetPacket(mBSPDCtx, pkt);
+
+            while (true)
+            {
+                op = BSPDGetPacket(mBSPDCtx, pkt);
+            }
+
+         //   BSPDSetLogCallback(mBSPDCtx, LogCallbackFunc);
             bSPDCache = new BSPDCache();
             mThread = new Thread(new ThreadStart(DataThread));
             mThread.IsBackground = true;

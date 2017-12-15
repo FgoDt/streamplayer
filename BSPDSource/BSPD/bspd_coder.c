@@ -211,14 +211,15 @@ int bc_init_coder(BSPDContext *ctx) {
 
 	ctx->pCoder->fVIndex = -1;
 
-	for (int i = 0; i < (int)ctx->pCoder->pFormatCtx->nb_streams; i++)
+	for (int i = 0; i < (int)ctx->pCoder->pFormatCtx->nb_streams&&i<MAX_MEDIATYPE_INDEX; i++)
 	{
 		if (ctx->pCoder->pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
 			bc_log(ctx, BSPD_LOG_DEBUG, "get video stream index at :%d\n", i);
 			ctx->pCoder->fVIndex = i;
-			break;
 		}
+        ctx->pCoder->allMediaTypeIndex[i] = ctx->pCoder->pFormatCtx->streams[i]->codec->codec_type;
+
 	}
 	if (ctx->pCoder->fVIndex == -1)
 	{
@@ -305,9 +306,8 @@ int bc_init_coder(BSPDContext *ctx) {
 }
 
 int bc_get_yuv(BSPDContext *ctx) {
-    if (ctx == NULL)
+    if (BSPDISNULL(ctx))
     {
-        bc_log(ctx, BSPD_LOG_ERROR, "ctx is null\n");
         return BSPD_USE_NULL_ERROR;
     }
 
@@ -370,7 +370,10 @@ int bc_get_yuv(BSPDContext *ctx) {
 
 int bc_close(BSPDContext *ctx) {
 
-
+    if (ctx == NULL || ctx->pCoder == NULL)
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
 
 
     if (ctx->pCoder->pFrame)
@@ -479,6 +482,68 @@ int bc_log(BSPDContext *ctx,int LEVEL,const char *fmt, ...)
 	}
 
 	return BSPD_OP_OK;
+}
+
+int bc_get_AV_packet(BSPDContext *ctx, BSPDPacketData *p) {
+    int flags = -1;
+    do 
+    {
+        flags = bc_get_packet(ctx, p);
+        if (p->pktType == AVMEDIA_TYPE_AUDIO &&p->pktType == AVMEDIA_TYPE_VIDEO)
+        {
+            break;
+        }
+    } while (flags == BSPD_OP_OK);
+    return flags;
+}
+
+int bc_get_packet(BSPDContext *ctx, BSPDPacketData *pkt) {
+    if (BSPDISNULL(ctx)||BSPPKTISNULL(pkt))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (ctx->pCoder->pFormatCtx == NULL ||
+        ctx->pCoder->pCodec == NULL ||
+        ctx->pCoder->pCodecCtx == NULL ||
+        ctx->pCoder->packet == NULL)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "formatctx pcodec codecctx packet maybe null\n");
+        return BSPD_USE_NULL_ERROR;
+    }
+    int ret, got;
+
+    int retval;
+
+    av_packet_unref(pkt->pkt);
+
+    if (av_read_frame(ctx->pCoder->pFormatCtx, pkt->pkt) < 0)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "av read frame error \n");
+        retval = BSPD_ERRO_UNDEFINE;
+    }
+    if (ctx->pCoder->fAIndex == pkt->pkt->stream_index)
+    {
+        pkt->pktType = AVMEDIA_TYPE_AUDIO;
+    }
+    else if(ctx->pCoder->fVIndex == pkt->pkt->stream_index)
+    {
+        pkt->pktType = AVMEDIA_TYPE_VIDEO;
+    }
+    else 
+    {
+        pkt->pktType = AVMEDIA_TYPE_UNKNOWN;
+    }
+
+    return BSPD_OP_OK;
+}
+
+int bc_decode_audio_packet(BSPDContext *ctx, BSPDPacketData *p) {
+    int sflags, rflags;
+   sflags =  avcodec_send_packet(ctx->pCoder->pCodecCtx, p->pkt);
+}
+int bc_decode_video_packet(BSPDContext *ctx, BSPDPacketData *p) {
+
 }
 
 int bc_test() {

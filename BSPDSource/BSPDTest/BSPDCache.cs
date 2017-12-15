@@ -80,5 +80,22 @@ namespace BSPDTest
                 }
             }
         }
+
+        object apktLock = new object();
+        object vpktLock = new object();
+        public Queue<IntPtr> APktQueue = new Queue<IntPtr>();
+        public Queue<IntPtr> vPktQueue = new Queue<IntPtr>();
+
+
+        public bool Push(IntPtr data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Pop(IntPtr data)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

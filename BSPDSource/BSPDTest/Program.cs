@@ -13,6 +13,8 @@ namespace BSPDTest
         [DllImport("BSPD")]
         private static extern void BSPDTest();
 
+
+
         static string yuvfilepath = "./test.yuv";
         static string input = "http://127.0.0.1/vod/cs.mkv";
         static BSPDMediaSource BSPDMS;
@@ -23,6 +25,7 @@ namespace BSPDTest
             BSPDMS = new BSPDMediaSource();
             BSPDMS.OpenMedia(input);
             System.Threading.Thread.Sleep(600);
+            BSPDMS.Close();
             BSPDMS.Close();
 
             BSPDMS = new BSPDMediaSource();

@@ -35,6 +35,15 @@
 #define BSPD_LOG_ERROR			1
 #define BSPD_LOG_DEBUG			255
 
+
+#define BSPD_FREE_MARK 0xf0f1f2
+#define BSPD_CLOSE_MARK 0x2f1f0f
+
+#define BSPDISNULL(x) ((x) == NULL || (x)->closeMark != BSPD_CLOSE_MARK || (x)->freeMark != BSPD_FREE_MARK)
+#define BSPPKTISNULL(x) ((x) == NULL || (x)->pkt == NULL)
+
+#define MAX_MEDIATYPE_INDEX 10
+
 typedef void(__stdcall *BSPDLogCallback)(char *log);
 
 typedef	struct {
@@ -49,7 +58,9 @@ typedef	struct {
 	unsigned char	*pBuf; //temp buf use to rw frame data
 	int				LOGLEVEL;
 	int				fVIndex;//first video stream index
+    int             fAIndex;//first audio stream index
 	int				initDone;
+    int             allMediaTypeIndex[MAX_MEDIATYPE_INDEX];
     clock_t         start_clock;
 }BSPDCoder;
 
@@ -74,6 +85,13 @@ typedef struct BSPDFrameQueue {
     BSPDMutex       *mutex;
     BSPDCond        *cond;
 }BSPDFrameQueue;
+
+typedef struct BSPDPacketData {
+    AVPacket            *pkt;
+    enum AVMediaType    pktType;
+    int                 closeMark;
+    int                 freeMark;
+}BSPDPacketData;
 
  /**
  * BSPD context
@@ -107,6 +125,9 @@ typedef	struct {
 	int64_t         vDuration;
 
 	BSPDLogCallback	logCallback;
+
+    int             closeMark;
+    int             freeMark;
 }BSPDContext;
 
 
@@ -132,5 +153,13 @@ int bc_test();
  * @param ... ²ÎÊý
  */
 int bc_log(BSPDContext *ctx,int LEVEL,const char * fmt, ...);
+
+int bc_get_packet(BSPDContext *ctx, BSPDPacketData *pkt);
+
+int bc_decode_audio_packet(BSPDContext *ctx,BSPDPacketData *p);
+
+int bc_decode_video_packet(BSPDContext *ctx,BSPDPacketData *p);
+
+int bc_free_packet();
 
 #endif // !__BSPD_CODER_H__
