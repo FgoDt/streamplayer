@@ -5,26 +5,27 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif
 
-#include <libavcodec\avcodec.h>
-#include <libavformat\avformat.h>
-#include <libavutil\imgutils.h>
-#include <libswscale\swscale.h>
-#include "bspd_mutex.h"
-#include "bspd_cond.h"
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+//#include "bspd_mutex.h"
+//#include "bspd_cond.h"
+//#include "FDCore.h"
 
 
 /**
- * BSPD OPTIONCODE define 
+ * BSPD OPTIONCODE define
  */
 #define BSPD_OP_OK				0
 #define BSPD_OPEN_ERRO			1
 #define BSPD_FIND_INFO_ERRO		2
-#define BSPD_NO_VIDEOS_FOUND	4	
+#define BSPD_NO_VIDEOS_FOUND	4
 #define BSPD_NO_CODEC_FOUND		8
 #define BSPD_OPEN_CODEC_ERRO	16
 #define BSPD_NO_MEMY			0x20
-#define BSPD_INPUT_ERROR		0x40	//bspdopen input ²ÎÊı´íÎó
-#define BSPD_OPTIONS_ERROR		0x80	//bspdopen options ²ÎÊı´íÎó
+#define BSPD_INPUT_ERROR		0x40	//bspdopen input å‚æ•°é”™è¯¯
+#define BSPD_OPTIONS_ERROR		0x80	//bspdopen options å‚æ•°é”™è¯¯
 #define BSPD_USE_NULL_ERROR		0x100
 #define BSPD_AVLIB_ERROR		0x200
 #define BSPD_ERRO_UNDEFINE		0x7fffffff //[0111 ... 1111]
@@ -44,46 +45,52 @@
 
 #define MAX_MEDIATYPE_INDEX 10
 
-typedef void(__stdcall *BSPDLogCallback)(char *log);
+int av_set_java_vm_flags;
+
+int bspd_hb_abort;
+
+typedef void( *BSPDLogCallback)(char *log);
 
 typedef	struct {
-	AVFormatContext *pFormatCtx;
-	AVCodecContext	*pCodecCtx;
-	AVCodec			*pCodec;
-	AVFrame			*pFrame;
-	AVFrame			*pFrameYUV;
-	struct SwsContext *imgSwsCtx;
-	AVPacket		*packet;
-	AVDictionary	*optDic;
-	unsigned char	*pBuf; //temp buf use to rw frame data
-	int				LOGLEVEL;
-	int				fVIndex;//first video stream index
+    AVFormatContext *pFormatCtx;
+    AVCodecContext	*pCodecCtx;
+    AVCodec			*pCodec;
+    AVFrame			*pFrame;
+    AVFrame			*pFrameYUV;
+    struct SwsContext *imgSwsCtx;
+    AVPacket		*packet;
+    AVDictionary	*optDic;
+    unsigned char	*pBuf; //temp buf use to rw frame data
+    int				LOGLEVEL;
+    int				fVIndex;//first video stream index
     int             fAIndex;//first audio stream index
-	int				initDone;
+    int				initDone;
     int             allMediaTypeIndex[MAX_MEDIATYPE_INDEX];
     clock_t         start_clock;
+//    FDCCtx          *fdcCtx;
+ //   FDCCtx          *fdSCtx;
 }BSPDCoder;
 
 typedef struct {
-	AVFrame         *pYuvData;
-	int             size;
-	int             width;
-	int             height;
-	int             cwidth;
-	int             cheight;
-	double          pts;
+    AVFrame         *pYuvData;
+    int             size;
+    int             width;
+    int             height;
+    int             cwidth;
+    int             cheight;
+    double          pts;
 }BSPDFrameData;
 
 #define QUEUE_SIZE 10
 typedef struct BSPDFrameQueue {
-	BSPDFrameData   queue[QUEUE_SIZE];
+    BSPDFrameData   queue[QUEUE_SIZE];
     int             max_size;
     int             size;
     int             rindex;
     int             windex;
     int             rindex_show;
-    BSPDMutex       *mutex;
-    BSPDCond        *cond;
+   // BSPDMutex       *mutex;
+  //  BSPDCond        *cond;
 }BSPDFrameQueue;
 
 typedef struct BSPDPacketData {
@@ -93,41 +100,42 @@ typedef struct BSPDPacketData {
     int                 freeMark;
 }BSPDPacketData;
 
- /**
- * BSPD context
- * ÓÃÓÚ¸÷¸ö½âÂëº¯ÊıÖ®¼äÊı¾İ´«µİ
- */
+/**
+* BSPD context
+* ç”¨äºå„ä¸ªè§£ç å‡½æ•°ä¹‹é—´æ•°æ®ä¼ é€’
+*/
 typedef	struct {
 
-	BSPDCoder		*pCoder;
+    BSPDCoder		*pCoder;
 
-	//ÊäÈëÃ½Ìåurl
-	char			*inputPath;
-	//´ò¿ªÊäÈëµÄ options
-	char			*options;
-	//½âÂë¿í¶È
-	int				codedWidth;
-	//½âÂë¸ß¶È
-	int				codedHeight;
-	//ÊÓÆµ¿í¶È
-	int				width;
-	//ÊÓÆµ¸ß¶È
-	int				height;
-	//YUVÖĞYdata size
-	int				ysize;
-	//²Ù×÷·µ»Øcode
-	int				opcode;
-	//frame Ê±¼ä´Á
-	int64_t			timeStamp;
-	//video fps
-	int             vFps;
-	//video duration 
-	int64_t         vDuration;
+    //è¾“å…¥åª’ä½“url
+    char			*inputPath;
+    //æ‰“å¼€è¾“å…¥çš„ options
+    char			*options;
+    //è§£ç å®½åº¦
+    int				codedWidth;
+    //è§£ç é«˜åº¦
+    int				codedHeight;
+    //è§†é¢‘å®½åº¦
+    int				width;
+    //è§†é¢‘é«˜åº¦
+    int				height;
+    //YUVä¸­Ydata size
+    int				ysize;
+    //æ“ä½œè¿”å›code
+    int				opcode;
+    //frame æ—¶é—´æˆ³
+    int64_t			timeStamp;
+    //video fps
+    int             vFps;
+    //video duration
+    int64_t         vDuration;
 
-	BSPDLogCallback	logCallback;
+    BSPDLogCallback	logCallback;
 
     int             closeMark;
     int             freeMark;
+    int             hb;
 }BSPDContext;
 
 
@@ -144,13 +152,13 @@ int bc_close(BSPDContext *ctx);
 int bc_test();
 
 /**
- * bc log 
- * Ê¹ÓÃbc log À´Êä³ölog ÈÕÖ¾
+ * bc log
+ * ä½¿ç”¨bc log æ¥è¾“å‡ºlog æ—¥å¿—
  *
- * @param ctx BSPDContext 
- * @param LEVEL log Êä³öµÈ¼¶
- * @param fmt ÈÕÖ¾Êä³ö¸ñÊ½
- * @param ... ²ÎÊı
+ * @param ctx BSPDContext
+ * @param LEVEL log è¾“å‡ºç­‰çº§
+ * @param fmt æ—¥å¿—è¾“å‡ºæ ¼å¼
+ * @param ... å‚æ•°
  */
 int bc_log(BSPDContext *ctx,int LEVEL,const char * fmt, ...);
 
@@ -162,4 +170,4 @@ int bc_decode_video_packet(BSPDContext *ctx,BSPDPacketData *p);
 
 int bc_free_packet();
 
-#endif // !__BSPD_CODER_H__
+#endif // !__BSPD_CODER_H_

@@ -1,5 +1,6 @@
 #include "bspd_sem.h"
 #include "bspd_coder.h"
+#include "bspd_mutex.h"
 
 BSPDSem * bspd_create_sem(UINT32 inital_val) {
     BSPDSem *sem;

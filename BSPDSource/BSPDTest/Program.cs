@@ -16,38 +16,13 @@ namespace BSPDTest
 
 
         static string yuvfilepath = "./test.yuv";
-        static string input = "http://127.0.0.1/vod/cs.mkv";
+        static string input = "C:/Users/rt-zl/Desktop/ffmpeg/bin/abc.mov";
         static BSPDMediaSource BSPDMS;
         
         static void Main(string[] args)
         {
-            BSPDTest();
             BSPDMS = new BSPDMediaSource();
             BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(600);
-            BSPDMS.Close();
-            BSPDMS.Close();
-
-            BSPDMS = new BSPDMediaSource();
-            BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(600);
-            BSPDMS.Close();
-
-            BSPDMS = new BSPDMediaSource();
-            BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(600);
-            BSPDMS.Close();
-
-            BSPDMS = new BSPDMediaSource();
-            BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(600);
-            BSPDMS.Close();
-
-
-            BSPDMS = new BSPDMediaSource();
-            BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(600);
-            BSPDMS.Close();
 
             while (true)
             {

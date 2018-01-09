@@ -164,14 +164,14 @@ namespace BSPDTest
             GC.SuppressFinalize(mBSPDCtx);
             BSPDOpen(mBSPDCtx, PATH, "");
 
-            int op = 123;
-            IntPtr pkt = BSPDCreatePacket(mBSPDCtx, ref op);
-            op = BSPDGetPacket(mBSPDCtx, pkt);
+            //int op = 123;
+            //IntPtr pkt = BSPDCreatePacket(mBSPDCtx, ref op);
+            //op = BSPDGetPacket(mBSPDCtx, pkt);
 
-            while (true)
-            {
-                op = BSPDGetPacket(mBSPDCtx, pkt);
-            }
+            //while (true)
+            //{
+            //    op = BSPDGetPacket(mBSPDCtx, pkt);
+            //}
 
          //   BSPDSetLogCallback(mBSPDCtx, LogCallbackFunc);
             bSPDCache = new BSPDCache();
