@@ -8,7 +8,6 @@
 #endif
 
 extern "C"{
-
 #include "bspd_coder.h"
 #if __ANDROID_NDK__
 #include <libavcodec/jni.h>

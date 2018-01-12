@@ -10,6 +10,7 @@ BSPDSource/BSPDTest/x64/
 BSPDSource/BSPD/Debug/
 BSPDSource/BSPD/x64/
 BSPDSource/.vs/
+.vscode/
 
 # Prerequisites
 *.d

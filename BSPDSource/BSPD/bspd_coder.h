@@ -45,9 +45,9 @@
 
 #define MAX_MEDIATYPE_INDEX 10
 
-int av_set_java_vm_flags;
+static int av_set_java_vm_flags;
 
-int bspd_hb_abort;
+static int bspd_hb_abort;
 
 typedef void( *BSPDLogCallback)(char *log);
 

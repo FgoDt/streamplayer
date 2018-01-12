@@ -217,7 +217,7 @@ int bc_init_coder(BSPDContext *ctx) {
 
 
     av_register_all();
-//    avformat_network_init();
+    avformat_network_init();
     if (!(ctx->pCoder->pFormatCtx = avformat_alloc_context()))
     {
         bc_log(ctx, BSPD_LOG_ERROR, "avformat alloc context error\n");
@@ -354,7 +354,9 @@ int bc_init_coder(BSPDContext *ctx) {
 }
 
 int bc_get_yuv(BSPDContext *ctx) {
-    if (BSPDISNULL(ctx))
+    if (ctx == NULL||
+        ctx->freeMark != BSPD_FREE_MARK ||
+        ctx->closeMark != BSPD_CLOSE_MARK)
     {
         return BSPD_USE_NULL_ERROR;
     }
@@ -614,6 +616,5 @@ int bc_decode_video_packet(BSPDContext *ctx, BSPDPacketData *p) {
 
 int bc_test() {
     BSPDFrameQueue *q = malloc(sizeof(BSPDFrameQueue));
-   // bspd_init_queue(q, 10);
     return BSPD_OP_OK;
 }
