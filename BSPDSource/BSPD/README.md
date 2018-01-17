@@ -6,7 +6,7 @@ a sample lib, decode use [FFmpeg](http://ffmpeg.org/)
 
 video container can be any
 
-### how this work
+### how it work
 container->sample->h264->yuv420p
 
 ### how to use
