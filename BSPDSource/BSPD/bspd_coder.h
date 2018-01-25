@@ -74,6 +74,7 @@ typedef	struct {
     enum AVPixelFormat hwPixFmt;
     int             useHW;
     int             hwInitDone;
+    AVFrame         *phwImgFrame;
 
 //    FDCCtx          *fdcCtx;
  //   FDCCtx          *fdSCtx;

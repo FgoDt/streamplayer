@@ -35,7 +35,7 @@ namespace BSPDTest
             BSPDMS = new BSPDMediaSource();
             BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
             BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(10);
+            System.Threading.Thread.Sleep(10000);
                 BSPDMS.Close();
               
             }

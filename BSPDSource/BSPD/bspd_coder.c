@@ -184,7 +184,7 @@ enum AVPixelFormat find_fmt_by_hw_type(const enum AVHWDeviceType type) {
 int hw_decoder_init(BSPDContext *ctx, const enum AVHWDeviceType type) {
     if (BSPDISNULL(ctx))
     {
-        return;
+        return BSPD_USE_NULL_ERROR;
     }
     int err = 0;
     if ((err = av_hwdevice_ctx_create( &ctx->pCoder->hwBufCtx,type,NULL,NULL,0))<0)
@@ -196,15 +196,15 @@ int hw_decoder_init(BSPDContext *ctx, const enum AVHWDeviceType type) {
     return err;
 }
 
-enum AVPixelFormat get_hw_format(BSPDContext *ctx, const enum AVPixelFormat *pix_fmts) {
-    if (BSPDISNULL(ctx))
+enum AVPixelFormat get_hw_format(AVCodecContext *ctx, const enum AVPixelFormat *pix_fmts) {
+   /* if (BSPDISNULL(ctx))
     {
         return AV_PIX_FMT_NONE;
-    }
+    }*/
     const enum AVPixelFormat *p;
     for ( p = pix_fmts; *p != -1; p++)
     {
-        if (*p == ctx->pCoder->hwPixFmt)
+        if (*p == ctx->pix_fmt )
         {
             return *p;
         }
@@ -268,7 +268,7 @@ int bc_parse_options(BSPDContext *ctx)
         return BSPD_USE_NULL_ERROR;
     }
 
-   int index = strchr(ctx->options, '#');
+   char* index = strchr(ctx->options, '#');
 
    const char *bspoption = NULL;
    char *ffoption = NULL;
@@ -426,7 +426,7 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
     ctx->pCoder->pCodec = avcodec_find_decoder(ctx->pCoder->pCodecCtx->codec_id);
-    if(ctx->pCoder->pCodec == BSPD_CLOSE_MARK){
+    if(ctx->pCoder->pCodec == NULL){
         bc_log(ctx,BSPD_LOG_ERROR,"no codec found!");
         return BSPD_NO_CODEC_FOUND;
     }
@@ -451,13 +451,14 @@ int bc_init_coder(BSPDContext *ctx) {
 #if TARGET_OS_IPHONE
         hwType = av_hwdevice_find_type_by_name("videotoolbox");
 #endif
-        hwType = av_hwdevice_iterate_types(AV_HWDEVICE_TYPE_NONE);
+      //  hwType = av_hwdevice_iterate_types(AV_HWDEVICE_TYPE_NONE);
         if (hwType != AV_HWDEVICE_TYPE_NONE)
         {
             ctx->pCoder->hwPixFmt = find_fmt_by_hw_type(hwType);
         }
         if (ctx->pCoder->hwPixFmt != -1)
         {
+            ctx->pCoder->pCodecCtx->pix_fmt = ctx->pCoder->hwPixFmt;
             ctx->pCoder->pCodecCtx->get_format = get_hw_format;
             ctx->pCoder->hwInitDone = !hw_decoder_init(ctx, hwType);
         }
@@ -558,7 +559,7 @@ int bc_get_yuv(BSPDContext *ctx) {
         bc_log(ctx, BSPD_LOG_ERROR, "formatctx pcodec codecctx packet maybe null\n");
         return BSPD_USE_NULL_ERROR;
     }
-    int ret, got;
+    int ret;
 
     int retval;
     while (1)
@@ -603,15 +604,33 @@ int bc_get_yuv(BSPDContext *ctx) {
             {
                 bc_log(ctx,BSPD_LOG_ERROR,"pix_fmt %d, format %d",ctx->pCoder->pCodecCtx->pix_fmt,ctx->pCoder->pFrame->format);
             }
-            sws_scale(ctx->pCoder->imgSwsCtx, ctx->pCoder->pFrame->data,
-                      ctx->pCoder->pFrame->linesize, 0, ctx->pCoder->pCodecCtx->height,
-                      ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
-            ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
-            if (ctx->pCoder->pFormatCtx)
-            {
 
+            if (ctx->pCoder->hwInitDone)
+            {
+                if (ctx->pCoder->phwImgFrame == NULL)
+                {
+                    ctx->pCoder->phwImgFrame = av_frame_alloc();
+                }
+                if ((ret = av_hwframe_transfer_data(ctx->pCoder->phwImgFrame,ctx->pCoder->pFrame,0))<0)
+                {
+                    bc_log(ctx, BSPD_LOG_ERROR, "hw transfer data error");
+                    return BSPD_AVLIB_ERROR;
+                }
+
+                sws_scale(ctx->pCoder->imgSwsCtx, ctx->pCoder->phwImgFrame->data,
+                    ctx->pCoder->phwImgFrame->linesize, 0, ctx->pCoder->pCodecCtx->height,
+                    ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
+                ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
             }
-            ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->pFrame->pts;
+            else
+            {
+                sws_scale(ctx->pCoder->imgSwsCtx, ctx->pCoder->pFrame->data,
+                    ctx->pCoder->pFrame->linesize, 0, ctx->pCoder->pCodecCtx->height,
+                    ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
+                ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
+            }
+            //fix me if media is mov mp4 3gp
+            //ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->pFrame->pts;
             ctx->timeStamp = ctx->pCoder->pFrame->pts;
             //ctx->vDuration = av_q2d((AVRational) { ctx->pCoder->pFrame->nb_samples, ctx->pCoder->pFrame->sample_rate });
             ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
@@ -661,6 +680,11 @@ int bc_close(BSPDContext *ctx) {
         sws_freeContext(ctx->pCoder->imgSwsCtx);
     }
 
+    if (ctx->pCoder->phwImgFrame)
+    {
+        av_frame_unref(ctx->pCoder->phwImgFrame);
+        av_frame_free(&ctx->pCoder->phwImgFrame);
+    }
 
 
     if (ctx->pCoder->pCodecCtx)
@@ -701,7 +725,7 @@ __inline static char * timeString(int64_t *start_clock) {
     struct tm * timeinfo = localtime(&t);
     static char timeStr[100];
     //av_gettime_relative();
-    sprintf(timeStr, "[%.2d-%.2d %.2d:%.2d:%.2d] [ptime: %ld]", timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, cput );
+    sprintf(timeStr, "[%.2d-%.2d %.2d:%.2d:%.2d] [ptime: %I64d]", timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, cput );
     return timeStr;
 }
 
