@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using System.Runtime.InteropServices;
 
@@ -16,20 +18,61 @@ namespace BSPDTest
 
 
         static string yuvfilepath = "./test.yuv";
-        static string input = "C:/Users/rt-zl/Desktop/ffmpeg/bin/abc.mov";
+        //'static string input = "http://192.168.3.69/vod/cs.mkv";
+        static string input = "rtmp://live.na369.com/LiveT101/LDT32";
         static BSPDMediaSource BSPDMS;
         
         static void Main(string[] args)
         {
             BSPDMS = new BSPDMediaSource();
+            BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
             BSPDMS.OpenMedia(input);
+            // System.Threading.Thread.Sleep(100000000);
+            //        BSPDMS.Close();
+            //BSPDMS = new BSPDMediaSource();
+            //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            //BSPDMS.OpenMedia(input);
+            //System.Threading.Thread.Sleep(10);
+            //        BSPDMS.Close();
+            //BSPDMS = new BSPDMediaSource();
+            //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            //BSPDMS.OpenMedia(input);
+            //System.Threading.Thread.Sleep(10);
+            //        BSPDMS.Close();
+            //BSPDMS = new BSPDMediaSource();
+            //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            //BSPDMS.OpenMedia(input);
+            //System.Threading.Thread.Sleep(10);
+            //        BSPDMS.Close();
+            //BSPDMS = new BSPDMediaSource();
+            //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            //BSPDMS.OpenMedia(input);
+            //System.Threading.Thread.Sleep(10);
+            //        BSPDMS.Close();
+            //BSPDMS = new BSPDMediaSource();
+            //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            //BSPDMS.OpenMedia(input);
+            //System.Threading.Thread.Sleep(100);
+            //        BSPDMS.Close();
 
+            BSPDMS.Close();
+            //int i = 0;
             while (true)
             {
-                BSPDMS.CheckUpdate();
-                Console.WriteLine("----");
+            //    BSPDMS.CheckUpdate();
+            BSPDMS = new BSPDMediaSource();
+            BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            BSPDMS.OpenMedia(input);
+          //  System.Threading.Thread.Sleep(10);
+                BSPDMS.Close();
+              
             }
 
+        }
+
+        private static void BSPDMS_MediaStateChage(BSPDMediaSource.BSPDMediaState sate)
+        {
+            Console.WriteLine("state:" + sate);
         }
     }
 }

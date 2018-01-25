@@ -55,6 +55,6 @@ extern "C" _DLLEXPORT int BSPDClose(BSPDContext *bspdctx);
 
 extern "C" _DLLEXPORT int BSPDSetLogCallback(BSPDContext *bspdctx,BSPDLogCallback call);
 
-extern "C" _DLLEXPORT int BSPDAbort();
+extern "C" _DLLEXPORT int BSPDAbort(BSPDContext *bspdctx);
 
 #endif // ! __BSPD_H__

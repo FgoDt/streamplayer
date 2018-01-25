@@ -44,13 +44,14 @@ _DLLEXPORT BSPDContext* BSPDCreateCtx(){
 
 _DLLEXPORT int  BSPDOpen(BSPDContext *ctx, char * input, char * options)
 {
-    bspd_hb_abort = 0;
    int flags = BSPD_OP_OK;
 
     if (BSPDISNULL(ctx))
     {
         return BSPD_USE_NULL_ERROR;
     }
+
+    ctx->bspd_hb_abort = 0;
 
     size_t slen = strlen(input);
 
@@ -225,8 +226,12 @@ _DLLEXPORT int BSPDGetPacket(BSPDContext *bspdctx, BSPDPacketData *pkt) {
 }
 
 
-_DLLEXPORT int BSPDAbort(){
-    bspd_hb_abort = 0xff00ff;
+_DLLEXPORT int BSPDAbort(BSPDContext *ctx){
+    if (ctx == NULL)
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+    ctx->bspd_hb_abort = 0xff00ff;
     return BSPD_OP_OK;
 }
 

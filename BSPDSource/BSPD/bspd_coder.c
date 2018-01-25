@@ -1,7 +1,7 @@
 #include "bspd_coder.h"
 #include <time.h>
 #include <libavutil/time.h>
-
+#include <libavutil/hwcontext.h>
 #define MAX_PRINT_LEN 2048
 
 //#include "FDCore.h"
@@ -153,12 +153,79 @@ int bspd_queue_nb_remaining(BSPDFrameQueue *q) {
 }
 #endif
 
+enum AVPixelFormat find_fmt_by_hw_type(const enum AVHWDeviceType type) {
+    enum AVPixelFormat fmt;
+
+    switch (type)
+    {
+    case AV_HWDEVICE_TYPE_VAAPI:
+        fmt = AV_PIX_FMT_VAAPI;
+        break;
+    case AV_HWDEVICE_TYPE_CUDA:
+        fmt = AV_PIX_FMT_CUDA;
+        break;
+    case AV_HWDEVICE_TYPE_D3D11VA:
+        fmt = AV_PIX_FMT_D3D11;
+        break;
+    case AV_HWDEVICE_TYPE_DXVA2:
+        fmt = AV_PIX_FMT_DXVA2_VLD;
+        break;
+    case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+        fmt = AV_PIX_FMT_VIDEOTOOLBOX;
+        break;
+    default:
+        fmt = AV_PIX_FMT_NONE;
+        break;
+    }
+
+    return fmt;
+}
+
+int hw_decoder_init(BSPDContext *ctx, const enum AVHWDeviceType type) {
+    if (BSPDISNULL(ctx))
+    {
+        return;
+    }
+    int err = 0;
+    if ((err = av_hwdevice_ctx_create( &ctx->pCoder->hwBufCtx,type,NULL,NULL,0))<0)
+    {
+        bc_log(ctx, AV_LOG_ERROR, "create hw device error");
+        return err;
+    }
+    ctx->pCoder->pCodecCtx->hw_device_ctx = av_buffer_ref(ctx->pCoder->hwBufCtx);
+    return err;
+}
+
+enum AVPixelFormat get_hw_format(BSPDContext *ctx, const enum AVPixelFormat *pix_fmts) {
+    if (BSPDISNULL(ctx))
+    {
+        return AV_PIX_FMT_NONE;
+    }
+    const enum AVPixelFormat *p;
+    for ( p = pix_fmts; *p != -1; p++)
+    {
+        if (*p == ctx->pCoder->hwPixFmt)
+        {
+            return *p;
+        }
+    }
+    return AV_PIX_FMT_NONE;
+}
+
 int decodec_interrupt_cb(void *ctx){
-    if (bspd_hb_abort == 0xff00ff){
+    if (((BSPDContext*)ctx)->bspd_hb_abort == 0xff00ff){
         return  1;
     }
     if(((BSPDContext*)ctx)->hb == -1 ){
         return 0;
+        int64_t cur = av_gettime();
+        if (cur - ((BSPDContext*)ctx)->pCoder->start_clock > 3000*1000) {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
     } else{
         if(((BSPDContext*)ctx)->hb > 200){
             return 1;
@@ -186,13 +253,100 @@ void setval(BSPDContext *ctx) {
     ctx->vFps = ctx->pCoder->pCodecCtx->framerate.num;
 }
 
+// bspd option "dhc ... # xxx xxx xxx "
+// use #split bspd option and ffmpeg option
 int bc_parse_options(BSPDContext *ctx)
 {
-    return BSPD_ERRO_UNDEFINE;
+
+    if (BSPDISNULL(ctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (ctx->options == NULL || strlen(ctx->options)==0)
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+   int index = strchr(ctx->options, '#');
+
+   const char *bspoption = NULL;
+   char *ffoption = NULL;
+
+   //no ffmpeg option
+   if (index == NULL)
+   {
+       bspoption = ctx->options;
+       char argv[100][100] = { 0 };
+       char temp[100] = { 0 };
+       int i = 0;
+       int j = 0;
+       for(;bspoption[0] !='\0' || j != 0;bspoption++)
+       {
+           if (bspoption[0] == ' ' || bspoption[0] == '\0')
+           {
+               temp[j] = '\0';
+               j++;
+               memcpy(argv[i], temp, j);
+
+               i++;
+               j=0;
+           }
+           else
+           {
+               temp[j] = bspoption[0];
+               j++;
+           }
+       }
+       j = 0;
+       char *arg;
+       while (j<i)
+       {
+           arg = argv[j];
+           if (0==strcmp(arg,"-d"))
+           {
+               ctx->pCoder->LOGLEVEL = AV_LOG_DEBUG;
+               j++;
+               continue;
+           }
+           else if(0==strcmp(arg,"-hw"))
+           {
+               ctx->pCoder->useHW = 1;
+               j++;
+               continue;
+           }
+           else if (0==strcmp(arg, "-psize"))
+           {
+               j++;
+               ctx->pCoder->pSize = atoi(argv[j]);
+               j++;
+               continue;
+           }
+           else 
+           {
+               j++;
+           }
+
+       }
+   }
+   //has ffmpeg option
+   else
+   {
+       
+   }
+
+    return BSPD_OP_OK;
 }
 
 int bc_set_default_options(BSPDContext *ctx) {
-    return BSPD_ERRO_UNDEFINE;
+    if (BSPDISNULL(ctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+    ctx->pCoder->LOGLEVEL = AV_LOG_ERROR;
+    ctx->pCoder->useHW = 0;
+    ctx->pCoder->pSize = 1024000;
+    return BSPD_OP_OK;
 }
 
 int bc_init_coder(BSPDContext *ctx) {
@@ -228,14 +382,16 @@ int bc_init_coder(BSPDContext *ctx) {
     ctx->pCoder->pFormatCtx->interrupt_callback.opaque = ctx;
 
     //// fix me use options
-    ctx->pCoder->pFormatCtx->probesize =  32;
+    ctx->pCoder->pFormatCtx->probesize = ctx->pCoder->pSize;
     /////
 
+    //ctx->hb = 0;
     if (avformat_open_input(&ctx->pCoder->pFormatCtx,ctx->inputPath,NULL,NULL)!=0)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "avformat open input error\n");
         return BSPD_AVLIB_ERROR;
     }
+    ctx->hb = -2;
 
     if (avformat_find_stream_info(ctx->pCoder->pFormatCtx,NULL)<0)
     {
@@ -285,6 +441,28 @@ int bc_init_coder(BSPDContext *ctx) {
         }
     }
 #endif
+    enum AVHWDeviceType hwType ;
+
+    if (ctx->pCoder->useHW)
+    {
+#if _WIN32||_WIN64
+        hwType = av_hwdevice_find_type_by_name("dxva2");
+#endif
+#if TARGET_OS_IPHONE
+        hwType = av_hwdevice_find_type_by_name("videotoolbox");
+#endif
+        hwType = av_hwdevice_iterate_types(AV_HWDEVICE_TYPE_NONE);
+        if (hwType != AV_HWDEVICE_TYPE_NONE)
+        {
+            ctx->pCoder->hwPixFmt = find_fmt_by_hw_type(hwType);
+        }
+        if (ctx->pCoder->hwPixFmt != -1)
+        {
+            ctx->pCoder->pCodecCtx->get_format = get_hw_format;
+            ctx->pCoder->hwInitDone = !hw_decoder_init(ctx, hwType);
+        }
+    }
+
     if (ctx->pCoder->pCodec == NULL)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "no codec found\n");
@@ -327,10 +505,21 @@ int bc_init_coder(BSPDContext *ctx) {
                          AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width,
                          ctx->pCoder->pCodecCtx->height, 1);
 
-    ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
-                                            ctx->pCoder->pCodecCtx->height, ctx->pCoder->pCodecCtx->pix_fmt,
-                                            ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
-                                            AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
+    if (ctx->pCoder->useHW&&ctx->pCoder->hwInitDone)
+    {
+        //硬编码获得的纹理是nv12格式
+        ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
+            ctx->pCoder->pCodecCtx->height, AV_PIX_FMT_NV12,
+            ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
+            AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
+    }
+    else
+    {
+        ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
+            ctx->pCoder->pCodecCtx->height, ctx->pCoder->pCodecCtx->pix_fmt,
+            ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
+            AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
+    }
 
     if (ctx->pCoder->imgSwsCtx == NULL)
     {
@@ -390,7 +579,8 @@ int bc_get_yuv(BSPDContext *ctx) {
         }
 
        // bc_log(ctx,BSPD_LOG_DEBUG,"in decodec video2");
-        ret = avcodec_decode_video2(ctx->pCoder->pCodecCtx, ctx->pCoder->pFrame, &got, ctx->pCoder->packet);
+       // ret = avcodec_decode_video2(ctx->pCoder->pCodecCtx, ctx->pCoder->pFrame, &got, ctx->pCoder->packet);
+          ret = avcodec_send_packet(ctx->pCoder->pCodecCtx, ctx->pCoder->packet);
        // bc_log(ctx,BSPD_LOG_DEBUG,"out decode video2 and got:%d",got);
         if (ret < 0)
         {
@@ -400,8 +590,14 @@ int bc_get_yuv(BSPDContext *ctx) {
         }
 
 
-        if (got!=0)
+        ret = avcodec_receive_frame(ctx->pCoder->pCodecCtx, ctx->pCoder->pFrame);
+
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
         {
+            av_packet_unref(ctx->pCoder->packet);
+            continue;
+        }
+       
             //bc_log(ctx,BSPD_LOG_ERROR,"pix_fmt %d, format %d",ctx->pCoder->pCodecCtx->pix_fmt,ctx->pCoder->pFrame->format);
             if(ctx->pCoder->pCodecCtx->pix_fmt!= ctx->pCoder->pFrame->format)
             {
@@ -424,7 +620,6 @@ int bc_get_yuv(BSPDContext *ctx) {
            // fd_stream(ctx->pCoder->fdSCtx,ctx->pCoder->pFrameYUV->data[2],ctx->ysize/4);
             av_packet_unref(ctx->pCoder->packet);
             return BSPD_OP_OK;
-        }
 
         av_packet_unref(ctx->pCoder->packet);
 
@@ -492,16 +687,17 @@ int bc_close(BSPDContext *ctx) {
 }
 
 
-__inline static char * timeString(clock_t *start_clock) {
+__inline static char * timeString(int64_t *start_clock) {
     time_t t;
     time(&t);
-    clock_t cput;
-    cput = clock();
+    int64_t cput;
+    cput = av_gettime();
     if (start_clock != NULL && *start_clock == -1)
     {
         *start_clock = cput;
     }
     cput = cput - *start_clock;
+    cput /= 1000;
     struct tm * timeinfo = localtime(&t);
     static char timeStr[100];
     //av_gettime_relative();

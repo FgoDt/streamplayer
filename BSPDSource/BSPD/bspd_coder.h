@@ -47,7 +47,7 @@
 
 static int av_set_java_vm_flags;
 
-static int bspd_hb_abort;
+ //int bspd_hb_abort;
 
 typedef void( *BSPDLogCallback)(char *log);
 
@@ -66,7 +66,15 @@ typedef	struct {
     int             fAIndex;//first audio stream index
     int				initDone;
     int             allMediaTypeIndex[MAX_MEDIATYPE_INDEX];
-    clock_t         start_clock;
+    int64_t         start_clock;
+
+    int             pSize;
+    //HW 
+    AVBufferRef     *hwBufCtx;
+    enum AVPixelFormat hwPixFmt;
+    int             useHW;
+    int             hwInitDone;
+
 //    FDCCtx          *fdcCtx;
  //   FDCCtx          *fdSCtx;
 }BSPDCoder;
@@ -136,6 +144,7 @@ typedef	struct {
     int             closeMark;
     int             freeMark;
     int             hb;
+    int             bspd_hb_abort;
 }BSPDContext;
 
 
