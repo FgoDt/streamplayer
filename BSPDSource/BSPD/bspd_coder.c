@@ -443,6 +443,7 @@ int bc_init_coder(BSPDContext *ctx) {
 #endif
     enum AVHWDeviceType hwType ;
 
+    hwType = AV_HWDEVICE_TYPE_NONE;
     if (ctx->pCoder->useHW)
     {
 #if _WIN32||_WIN64
@@ -451,7 +452,6 @@ int bc_init_coder(BSPDContext *ctx) {
 #if TARGET_OS_IPHONE
         hwType = av_hwdevice_find_type_by_name("videotoolbox");
 #endif
-      //  hwType = av_hwdevice_iterate_types(AV_HWDEVICE_TYPE_NONE);
         if (hwType != AV_HWDEVICE_TYPE_NONE)
         {
             ctx->pCoder->hwPixFmt = find_fmt_by_hw_type(hwType);

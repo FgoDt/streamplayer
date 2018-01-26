@@ -73,6 +73,7 @@ _DLLEXPORT int  BSPDOpen(BSPDContext *ctx, char * input, char * options)
     ctx->inputPath[slen]= '\0';
     memcpy(ctx->inputPath, input, slen);
 
+    flags |= bc_set_default_options(ctx);
     if (options)
     {
         slen = strlen(options);
@@ -87,10 +88,6 @@ _DLLEXPORT int  BSPDOpen(BSPDContext *ctx, char * input, char * options)
             ctx->options[slen] = '\0';
             memcpy(ctx->options, options, slen);
             flags |= bc_parse_options(ctx);
-        }
-        else
-        {
-            flags |= bc_set_default_options(ctx);
         }
     }
 
