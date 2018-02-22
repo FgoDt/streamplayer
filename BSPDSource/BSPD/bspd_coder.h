@@ -9,6 +9,7 @@
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
+#include <libswresample/swresample.h>
 //#include "bspd_mutex.h"
 //#include "bspd_cond.h"
 //#include "FDCore.h"
@@ -28,6 +29,7 @@
 #define BSPD_OPTIONS_ERROR		0x80	//bspdopen options 参数错误
 #define BSPD_USE_NULL_ERROR		0x100
 #define BSPD_AVLIB_ERROR		0x200
+#define BSPD_TIMEOUT            0x400
 #define BSPD_ERRO_UNDEFINE		0x7fffffff //[0111 ... 1111]
 
 /**
@@ -55,20 +57,26 @@ typedef	struct {
     AVFormatContext *pFormatCtx;
     AVCodecContext	*pCodecCtx;
     AVCodec			*pCodec;
+    AVCodecContext  *pACodecCtx;
+    AVCodec         *pACodec;
     AVFrame			*pFrame;
     AVFrame			*pFrameYUV;
+    AVFrame         *pPcmFrame;
     struct SwsContext *imgSwsCtx;
+    struct SwrContext *pcmSwrCtx;
     AVPacket		*packet;
     AVDictionary	*optDic;
     unsigned char	*pBuf; //temp buf use to rw frame data
+    int             pSize;
     int				LOGLEVEL;
     int				fVIndex;//first video stream index
     int             fAIndex;//first audio stream index
     int				initDone;
     int             allMediaTypeIndex[MAX_MEDIATYPE_INDEX];
     int64_t         start_clock;
+    int64_t         timeout;
+    char            istimeout;
 
-    int             pSize;
     //HW 
     AVBufferRef     *hwBufCtx;
     enum AVPixelFormat hwPixFmt;
@@ -76,6 +84,10 @@ typedef	struct {
     int             hwInitDone;
     AVFrame         *phwImgFrame;
 
+    //audio
+    int             hasAudio;
+    int             channles;
+    int             sampleRate;
 //    FDCCtx          *fdcCtx;
  //   FDCCtx          *fdSCtx;
 }BSPDCoder;
@@ -156,6 +168,8 @@ int bc_set_default_options(BSPDContext *ctx);
 int bc_init_coder(BSPDContext *ctx);
 
 int bc_get_yuv(BSPDContext *ctx);
+
+int bc_get_raw(BSPDContext *ctx);
 
 int bc_close(BSPDContext *ctx);
 

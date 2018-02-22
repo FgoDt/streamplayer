@@ -78,20 +78,37 @@ namespace BSPDTest
         [DllImport("BSPD")]
         private static extern int BSPDAbort();
 
+        [DllImport("BSPD")]
+        private static extern int BSPDGetRawDataWithTime(IntPtr ctx, byte[] ydata, byte[] udata, byte[] ydat, ref long pts, ref long duration);
+
         static void LogCallbackFunc(string log)
         {
             Console.Write(log);
         }
 
+        int GetInt32(byte[] data)
+        {
+            if (data == null &&data.Length<4)
+            {
+                return -1;
+            }
+            int ret = 0;
+            ret = (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + (data[3]);
+            return ret;
+        }
 
         object mctxlocker = new object();
 
-        BSPDStaticCache StaticCache;
+        //  BSPDStaticCache StaticCache;
+        BSPDMediaCache mediaCache;
         BSPDCache bSPDCache;
         public string PATH;
+        BSPDTimeAsyncControl tcontrol;
         public bool OpenMedia(string url)
         {
-            StaticCache = new BSPDStaticCache();
+            mediaCache = new BSPDMediaCache();
+            //StaticCache = new BSPDStaticCache();
+            tcontrol = new BSPDTimeAsyncControl();
             PATH = url;
             StartThread();
 
@@ -120,16 +137,21 @@ namespace BSPDTest
            
             if (bSPDCache!=null&&nextData ==null)
             {
-                idex = StaticCache.PopIndex();
-                if (idex!=-1)
+                //idex = StaticCache.PopIndex();
+                //if (idex!=-1)
+                //{
+                //    nextData = StaticCache.mediaQueue[idex];
+                //    StaticCache.Pop();
+                //}
+                //else
+                //{
+                //    nextData = null;
+                //}
+                if (tcontrol.DelayTime>500)
                 {
-                    nextData = StaticCache.mediaQueue[idex];
-                    StaticCache.Pop();
+                    mediaCache.TrySkipFrame(-1);
                 }
-                else
-                {
-                    nextData = null;
-                }
+                nextData = mediaCache.Pop();
 //                nextData = bSPDCache.Pop(BSPDMediaDataType.Video);
             }
             if (preData == null&&nextData != null)
@@ -142,6 +164,7 @@ namespace BSPDTest
                 pretime = curtime;
                 MediaStateChage?.Invoke(BSPDMediaState.open);
                 Update();
+                tcontrol.SetInitTime(preData.vpts);
             }
             else
             {
@@ -166,13 +189,14 @@ namespace BSPDTest
 
         public void Update()
         {
-            Console.WriteLine(preData.vpts);
-            if (VBaseTime ==-1)
-            {
-              vPaseTime =  VBaseTime = preData.vpts;
-            }
-            vPaseTime += preData.vdur;
-            Console.WriteLine("DUR:" + preData.vdur);
+            tcontrol.CheckUpdate(preData);
+            //Console.WriteLine(preData.vpts);
+            //if (VBaseTime ==-1)
+            //{
+            //  vPaseTime =  VBaseTime = preData.vpts;
+            //}
+            //vPaseTime += preData.vdur;
+            //Console.WriteLine("DUR:" + preData.vdur);
             nextData = null;
         }
 
@@ -196,7 +220,7 @@ namespace BSPDTest
 
             mBSPDCtx = BSPDCreateCtx();
             GC.SuppressFinalize(mBSPDCtx);
-            BSPDOpen(mBSPDCtx, PATH, "-d -hw -psize 32");
+            BSPDOpen(mBSPDCtx, PATH, "-d -timeout 1000 -ha -ch 2 ");
 
             //int op = 123;
             //IntPtr pkt = BSPDCreatePacket(mBSPDCtx, ref op);
@@ -221,6 +245,8 @@ namespace BSPDTest
             BSPDMediaData mediaData = null;
             byte[] ydata, udata, vdata;
 
+            var  file = System.IO.File.Open("e:/test.pcm", System.IO.FileMode.OpenOrCreate);
+
             BSPDContext bSPD = (BSPDContext)Marshal.PtrToStructure(mBSPDCtx, typeof(BSPDContext));
             GC.SuppressFinalize(bSPD);
             ydata = new byte[bSPD.ysize];
@@ -231,47 +257,68 @@ namespace BSPDTest
             while (true)
             {
 
-                var idex= StaticCache.PushIndex();
-                if (idex == -1)
-                {
-                    Thread.Sleep(10);
-                    continue;
-                }
+                //var idex= StaticCache.PushIndex();
+                //if (idex == -1)
+                //{
+                //    Thread.Sleep(10);
+                //    continue;
+                //}
                 
-                if (mediaData== null)
-                {
-                    StaticCache.mediaQueue[idex] = new BSPDMediaData();
-                    StaticCache.mediaQueue[idex].YData = new byte[ydata.Length];
-                    StaticCache.mediaQueue[idex].VData = new byte[vdata.Length];
-                    StaticCache.mediaQueue[idex].UData = new byte[udata.Length];
-                }
+                //if (mediaData== null)
+                //{
+                //    StaticCache.mediaQueue[idex] = new BSPDMediaData();
+                //    StaticCache.mediaQueue[idex].YData = new byte[ydata.Length];
+                //    StaticCache.mediaQueue[idex].VData = new byte[vdata.Length];
+                //    StaticCache.mediaQueue[idex].UData = new byte[udata.Length];
+                //}
 
 
                 if (op)
                 {
+                    int flt = 0;
                     lock (mctxlocker)
                     {
-                        if(0 != BSPDGetYUVWithTime(mBSPDCtx, ydata, udata, vdata, ref vpts, ref apts, ref vduration, ref aduration))
+                        //if(0 != BSPDGetYUVWithTime(mBSPDCtx, ydata, udata, vdata, ref vpts, ref apts, ref vduration, ref aduration))
+                        //{
+                        //    MediaStateChage?.Invoke(BSPDMediaState.error);
+                        //}
+                        flt = BSPDGetRawDataWithTime(mBSPDCtx, ydata, udata, vdata, ref vpts, ref vduration);
+                        if(flt == 2)
                         {
-                            MediaStateChage?.Invoke(BSPDMediaState.error);
+                            int num = GetInt32(udata);
+                            file.Write(ydata, 0, num);
+                            continue;
+                        }
+                        else if (flt == 1)
+                        {
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
-                    //mediaData = new BSPDMediaData();
-                    //mediaData.YData = new byte[ydata.Length];
-                    //mediaData.VData = new byte[vdata.Length];
-                    //mediaData.UData = new byte[udata.Length];
-                    Array.Copy(ydata, StaticCache.mediaQueue[idex].YData, ydata.Length);
-                    Array.Copy(vdata, StaticCache.mediaQueue[idex].VData, vdata.Length);
-                    Array.Copy(udata, StaticCache.mediaQueue[idex].UData, udata.Length);
-                    StaticCache.mediaQueue[idex].vpts = vpts;
-                    StaticCache.mediaQueue[idex].vdur = vduration;
-                    StaticCache.mediaQueue[idex].MediaType = BSPDMediaDataType.Video;
+                    if (flt == 1)
+                    {
+                        mediaData = new BSPDMediaData();
+                        mediaData.YData = new byte[ydata.Length];
+                        mediaData.VData = new byte[vdata.Length];
+                        mediaData.UData = new byte[udata.Length];
+                        mediaData.vpts = vpts;
+                        mediaData.vdur = vduration;
+                    }
+                    //Array.Copy(ydata, StaticCache.mediaQueue[idex].YData, ydata.Length);
+                    //Array.Copy(vdata, StaticCache.mediaQueue[idex].VData, vdata.Length);
+                    //Array.Copy(udata, StaticCache.mediaQueue[idex].UData, udata.Length);
+                    //StaticCache.mediaQueue[idex].vpts = vpts;
+                    //StaticCache.mediaQueue[idex].vdur = vduration;
+                    //StaticCache.mediaQueue[idex].MediaType = BSPDMediaDataType.Video;
                 }
                 else
                 {
                     Thread.Sleep(10);
                 }
-                op = StaticCache.Push();
+                op = mediaCache.Push(mediaData);
+               // op = StaticCache.Push();
                 //op = bSPDCache.Push(mediaData);
             }
         }

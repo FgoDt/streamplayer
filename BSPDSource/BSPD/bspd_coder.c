@@ -219,7 +219,8 @@ int decodec_interrupt_cb(void *ctx){
     if(((BSPDContext*)ctx)->hb == -1 ){
         return 0;
         int64_t cur = av_gettime();
-        if (cur - ((BSPDContext*)ctx)->pCoder->start_clock > 3000*1000) {
+        if (cur - ((BSPDContext*)ctx)->pCoder->start_clock > ((BSPDContext*)ctx)->pCoder->timeout*1000) {
+            ((BSPDContext*)ctx)->pCoder->istimeout = 0x1;
             return 1;
         }
         else
@@ -277,12 +278,17 @@ int bc_parse_options(BSPDContext *ctx)
    if (index == NULL)
    {
        bspoption = ctx->options;
+       int stl = strlen(bspoption);
        char argv[100][100] = { 0 };
        char temp[100] = { 0 };
        int i = 0;
        int j = 0;
-       for(;bspoption[0] !='\0' || j != 0;bspoption++)
+       for(;bspoption[0] !='\0' || j != 0 ;bspoption++,stl--)
        {
+           if (stl<0)
+           {
+               break;
+           }
            if (bspoption[0] == ' ' || bspoption[0] == '\0')
            {
                temp[j] = '\0';
@@ -315,10 +321,36 @@ int bc_parse_options(BSPDContext *ctx)
                j++;
                continue;
            }
+           else if(0 == strcmp(arg,"-ha"))
+           {
+               ctx->pCoder->hasAudio = 1;
+               j++;
+               continue;
+           }
            else if (0==strcmp(arg, "-psize"))
            {
                j++;
                ctx->pCoder->pSize = atoi(argv[j]);
+               j++;
+               continue;
+           }
+           else if( 0 == strcmp(arg,"-timeout"))
+           {
+               j++;
+               ctx->pCoder->timeout = atoi(argv[j]);
+               j++;
+               continue;
+           }
+           else if (0 == strcmp(arg, "-ch")) {
+               j++;
+               ctx->pCoder->channles = atoi(argv[j]);
+               j++;
+               continue;
+           }
+           else if(0 == strcmp(arg,"-sr"))
+           {
+               j++;
+               ctx->pCoder->sampleRate = atoi(argv[j]);
                j++;
                continue;
            }
@@ -346,6 +378,7 @@ int bc_set_default_options(BSPDContext *ctx) {
     ctx->pCoder->LOGLEVEL = AV_LOG_ERROR;
     ctx->pCoder->useHW = 0;
     ctx->pCoder->pSize = 1024000;
+    ctx->pCoder->timeout = 15000;
     return BSPD_OP_OK;
 }
 
@@ -388,7 +421,16 @@ int bc_init_coder(BSPDContext *ctx) {
     //ctx->hb = 0;
     if (avformat_open_input(&ctx->pCoder->pFormatCtx,ctx->inputPath,NULL,NULL)!=0)
     {
+        if (ctx->pCoder->istimeout == 0x1)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "open input timeout");
+            return BSPD_TIMEOUT;
+        }
         bc_log(ctx, BSPD_LOG_ERROR, "avformat open input error\n");
+        return BSPD_AVLIB_ERROR;
+    }
+    if (ctx->bspd_hb_abort == 0xff00ff)
+    {
         return BSPD_AVLIB_ERROR;
     }
     ctx->hb = -2;
@@ -400,6 +442,7 @@ int bc_init_coder(BSPDContext *ctx) {
     }
 
     ctx->pCoder->fVIndex = -1;
+    ctx->pCoder->fAIndex = -1;
 
     for (int i = 0; i < (int)ctx->pCoder->pFormatCtx->nb_streams&&i<MAX_MEDIATYPE_INDEX; i++)
     {
@@ -407,6 +450,11 @@ int bc_init_coder(BSPDContext *ctx) {
         {
             bc_log(ctx, BSPD_LOG_DEBUG, "get video stream index at :%d\n", i);
             ctx->pCoder->fVIndex = i;
+        }
+        if (ctx->pCoder->pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+        {
+            bc_log(ctx, BSPD_LOG_DEBUG, "get audio stream index at :%d\n", i);
+            ctx->pCoder->fAIndex = i;
         }
         ctx->pCoder->allMediaTypeIndex[i] = ctx->pCoder->pFormatCtx->streams[i]->codec->codec_type;
 
@@ -417,6 +465,31 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
 
+    if (ctx->pCoder->fAIndex == -1)
+    {
+        bc_log(ctx, BSPD_LOG_DEBUG, "no audio find\n");
+    }
+
+    //init audio codec
+    if (ctx->pCoder->hasAudio)
+    {
+        ctx->pCoder->pACodecCtx = avcodec_alloc_context3(NULL);
+        int ret = avcodec_parameters_to_context(ctx->pCoder->pACodecCtx, ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->codecpar);
+        if (ret<0)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "audio codec ctx parse error\n");
+            return BSPD_AVLIB_ERROR;
+        }
+        ctx->pCoder->pACodec = avcodec_find_decoder(ctx->pCoder->pACodecCtx->codec_id);
+        if (ctx->pCoder->pACodec == NULL)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "no audio codec found!");
+            return BSPD_NO_CODEC_FOUND;
+        }
+    }
+
+
+    //init vido codec
     ctx->pCoder->pCodecCtx = avcodec_alloc_context3(NULL);
     //ctx->pCoder->pCodecCtx = ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codec;
     int ret = avcodec_parameters_to_context(ctx->pCoder->pCodecCtx, ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codecpar);
@@ -476,6 +549,13 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
 
+    if (ctx->pCoder->hasAudio == 1 && ctx->pCoder->pACodecCtx !=NULL
+        && avcodec_open2(ctx->pCoder->pACodecCtx,ctx->pCoder->pACodec,NULL)<0)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "audio codec open error\n");
+        return BSPD_AVLIB_ERROR;
+    }
+
     ctx->pCoder->pFrame = av_frame_alloc();
     if (ctx->pCoder->pFrame == NULL)
     {
@@ -528,6 +608,34 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
 
+    if (ctx->pCoder->hasAudio)
+    {
+        int sr = 0, ch = 0;
+        sr = ctx->pCoder->sampleRate;
+        ch = ctx->pCoder->channles;
+        if (ch == 0)
+        {
+            ch = ctx->pCoder->pACodecCtx->channels;
+            ctx->pCoder->channles = ch;
+        }
+        if (sr == 0)
+        {
+            sr = ctx->pCoder->pACodecCtx->sample_rate;
+        }
+        int och = av_get_default_channel_layout(ch);
+        int ich = av_get_default_channel_layout(ctx->pCoder->pACodecCtx->channels);
+        ctx->pCoder->pcmSwrCtx = swr_alloc();
+        //unity3d pcm is flt fmt
+        ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(ctx->pCoder->pcmSwrCtx, och,
+            AV_SAMPLE_FMT_FLT, sr, ich,
+            ctx->pCoder->pACodecCtx->sample_fmt, ctx->pCoder->pACodecCtx->sample_rate,
+            0, NULL);
+       int err = swr_init(ctx->pCoder->pcmSwrCtx);
+       if (err != 0)
+       {
+           return BSPD_AVLIB_ERROR;
+       }
+    }
     ctx->pCoder->packet = av_packet_alloc();
     if (ctx->pCoder->packet == NULL)
     {
@@ -629,9 +737,14 @@ int bc_get_yuv(BSPDContext *ctx) {
                     ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
                 ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
             }
-            //fix me if media is mov mp4 3gp
-            //ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->pFrame->pts;
-            ctx->timeStamp = ctx->pCoder->pFrame->pts;
+            if (!strcmp(ctx->pCoder->pFormatCtx->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2"))
+            {
+                ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->packet->pts;
+            }
+            else
+            {
+                ctx->timeStamp = ctx->pCoder->pFrame->pts;
+            }
             //ctx->vDuration = av_q2d((AVRational) { ctx->pCoder->pFrame->nb_samples, ctx->pCoder->pFrame->sample_rate });
             ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
            // fd_stream(ctx->pCoder->fdSCtx,ctx->pCoder->pFrameYUV->data[0],ctx->ysize);
@@ -645,6 +758,195 @@ int bc_get_yuv(BSPDContext *ctx) {
     }
     av_packet_unref(ctx->pCoder->packet);
 
+    return BSPD_ERRO_UNDEFINE;
+}
+
+int bc_decode_audio(BSPDContext *ctx) {
+    if (BSPDISNULL(ctx))
+    {
+        return BSPD_ERRO_UNDEFINE;
+    }
+    int ret = avcodec_send_packet(ctx->pCoder->pACodecCtx, ctx->pCoder->packet);
+
+    if (ret<0)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "send audio packet error code: %d\n", ret);
+        return BSPD_AVLIB_ERROR;
+    }
+
+    ret = avcodec_receive_frame(ctx->pCoder->pACodecCtx, ctx->pCoder->pFrame);
+
+    av_packet_unref(ctx->pCoder->packet);
+
+    return ret;
+}
+
+int bc_decode_video(BSPDContext *ctx) {
+    int ret = avcodec_send_packet(ctx->pCoder->pCodecCtx, ctx->pCoder->packet);
+
+    if (ret<0)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "send video packet error code: %d\n",ret);
+        return BSPD_AVLIB_ERROR;
+    }
+
+    ret = avcodec_receive_frame(ctx->pCoder->pCodecCtx, ctx->pCoder->pFrame);
+
+
+    av_packet_unref(ctx->pCoder->packet);
+
+    return ret;
+}
+
+int bc_sws_pic(BSPDContext *ctx) {
+    if (BSPDISNULL(ctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    int ret = 0;
+    if (ctx->pCoder->pCodecCtx->pix_fmt != ctx->pCoder->pFrame->format)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "pix_fmt %d, format %d", ctx->pCoder->pCodecCtx->pix_fmt, ctx->pCoder->pFrame->format);
+    }
+
+    if (ctx->pCoder->hwInitDone)
+    {
+        if (ctx->pCoder->phwImgFrame == NULL)
+        {
+            ctx->pCoder->phwImgFrame = av_frame_alloc();
+        }
+        if ((ret = av_hwframe_transfer_data(ctx->pCoder->phwImgFrame, ctx->pCoder->pFrame, 0)) < 0)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "hw transfer data error");
+            return BSPD_AVLIB_ERROR;
+        }
+
+        sws_scale(ctx->pCoder->imgSwsCtx, ctx->pCoder->phwImgFrame->data,
+            ctx->pCoder->phwImgFrame->linesize, 0, ctx->pCoder->pCodecCtx->height,
+            ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
+        ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
+    }
+    else
+    {
+        sws_scale(ctx->pCoder->imgSwsCtx, ctx->pCoder->pFrame->data,
+            ctx->pCoder->pFrame->linesize, 0, ctx->pCoder->pCodecCtx->height,
+            ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
+        ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
+    }
+    if (!strcmp(ctx->pCoder->pFormatCtx->iformat->name, "mov,mp4,m4a,3gp,3g2,mj2"))
+    {
+        ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->packet->pts;
+    }
+    else
+    {
+        ctx->timeStamp = ctx->pCoder->pFrame->pts;
+    }
+    ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+    return BSPD_OP_OK;
+}
+
+int bc_swr_pcm(BSPDContext *ctx) {
+    if (BSPDISNULL(ctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (ctx->pCoder->pcmSwrCtx != NULL)
+    {
+        if (ctx->pCoder->pBuf == NULL)
+        {
+            ctx->pCoder->pBuf = (unsigned char*)malloc(102400);
+        }
+        int ret = swr_convert(ctx->pCoder->pcmSwrCtx, &ctx->pCoder->pBuf,
+            ctx->pCoder->pFrame->nb_samples,
+            (const uint8_t**)ctx->pCoder->pFrame->extended_data, ctx->pCoder->pFrame->nb_samples);
+
+        if (ret>0)
+        {
+            int flag = 0;
+            if (ctx->pCoder->sampleRate != 0)
+            {
+                flag = 1;
+            }
+            ctx->pCoder->pSize = av_samples_get_buffer_size(NULL, ctx->pCoder->channles, ret, AV_SAMPLE_FMT_FLT, flag);
+            ctx->timeStamp = ctx->pCoder->pFrame->pkt_pts;
+            ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+            return BSPD_OP_OK;
+        }
+        
+    }
+    return BSPD_AVLIB_ERROR;
+}
+
+int bc_get_raw(BSPDContext * ctx)
+{
+    if (BSPDISNULL(ctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (ctx->pCoder->pFormatCtx == NULL ||
+        ctx->pCoder->pCodec == NULL ||
+        ctx->pCoder->pCodecCtx == NULL ||
+        ctx->pCoder->packet == NULL)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "formatctx pcodec codecctx packet maybe null\n");
+        return BSPD_USE_NULL_ERROR;
+    }
+    int ret;
+
+    int retval;
+    while (1)
+    {
+        ctx->hb = 0;
+        int flag = 0;
+        if (av_read_frame(ctx->pCoder->pFormatCtx, ctx->pCoder->packet) < 0)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "av read frame error \n");
+            retval = BSPD_ERRO_UNDEFINE;
+            break;
+        }
+        int index = -1;
+        index = ctx->pCoder->packet->stream_index;
+        if (ctx->pCoder->packet->stream_index == ctx->pCoder->fAIndex
+            && ctx->pCoder->hasAudio)
+        {
+            flag = bc_decode_audio(ctx);
+        }
+        else if (ctx->pCoder->packet->stream_index == ctx->pCoder->fVIndex)
+        {
+            flag = bc_decode_video(ctx);
+        }
+        else
+        {
+            av_packet_unref(ctx->pCoder->packet);
+        }
+
+        if (flag == AVERROR(EAGAIN))
+        {
+            continue;
+        }
+
+        if (index == ctx->pCoder->fAIndex&&ctx->pCoder->hasAudio)
+        {
+            ret = bc_swr_pcm(ctx);
+            if (ret == BSPD_OP_OK)
+            {
+                return 2;
+            }
+        }
+        else if (index == ctx->pCoder->fVIndex)
+        {
+            ret = bc_sws_pic(ctx);
+            if (ret == BSPD_OP_OK)
+            {
+                return 1;
+            }
+        }
+
+
+    }
     return BSPD_ERRO_UNDEFINE;
 }
 
@@ -692,6 +994,12 @@ int bc_close(BSPDContext *ctx) {
         avcodec_close(ctx->pCoder->pCodecCtx);
         avcodec_free_context(&ctx->pCoder->pCodecCtx);
 
+    }
+
+    if (ctx->pCoder->pACodecCtx)
+    {
+        avcodec_close(ctx->pCoder->pACodecCtx);
+        avcodec_free_context(&ctx->pCoder->pACodecCtx);
     }
 
     if (ctx->pCoder->pFormatCtx)
@@ -831,7 +1139,7 @@ int bc_decode_audio_packet(BSPDContext *ctx, BSPDPacketData *p) {
     sflags =  avcodec_send_packet(ctx->pCoder->pCodecCtx, p->pkt);
 }
 int bc_decode_video_packet(BSPDContext *ctx, BSPDPacketData *p) {
-
+    return BSPD_AVLIB_ERROR;
 }
 
 int bc_test() {

@@ -13,6 +13,33 @@ _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata) {
     return BSPD_ERRO_UNDEFINE;
 }
 
+_DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext * bspdctx, char * ydata, char * udata, char * vdata, int64_t * pts, int64_t * duration)
+{
+    int ret = bc_get_raw(bspdctx);
+
+    if (ret == 1)
+    {
+        memcpy(ydata, bspdctx->pCoder->pFrameYUV->data[0], bspdctx->ysize);
+        memcpy(ydata, bspdctx->pCoder->pFrameYUV->data[1], bspdctx->ysize/4);
+        memcpy(ydata, bspdctx->pCoder->pFrameYUV->data[2], bspdctx->ysize/4);
+        *pts = bspdctx->timeStamp;
+        *duration = bspdctx->vDuration;
+    }
+    else if(ret == 2)
+    {
+        int asize = bspdctx->pCoder->pSize;
+        memcpy(ydata, bspdctx->pCoder->pBuf, bspdctx->pCoder->pSize);
+        udata[0] = (asize >> 24) & 0xff;
+        udata[1] = (asize >> 16) & 0xff;
+        udata[2] = (asize >> 8) & 0xff;
+        udata[3] = (asize) & 0xff;
+        *pts = bspdctx->timeStamp;
+        *duration = bspdctx->vDuration;
+
+    }
+    return ret;
+}
+
 _DLLEXPORT BSPDContext* BSPDCreateCtx(){
 	BSPDContext *ctx = NULL;
 	ctx = (BSPDContext*)malloc(sizeof(BSPDContext));

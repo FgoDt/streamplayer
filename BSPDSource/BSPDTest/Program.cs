@@ -18,26 +18,27 @@ namespace BSPDTest
 
 
         static string yuvfilepath = "./test.yuv";
-        static string input = "http://192.168.3.69/vod/cs.mkv";
+        static string input = "http://192.168.3.69/vod/css.mkv";
+       // static string input = "http://182.150.11.187/live-tx-hdl.huomaotv.cn/live/9eiHIY23992.flv?from=huomaoroom&dispatch_from=ztc10.230.33.209&utime=1518487699647";
         static BSPDMediaSource BSPDMS;
         
         static void Main(string[] args)
         {
-            BSPDMS = new BSPDMediaSource();
-            BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
-            BSPDMS.OpenMedia(input);
+            //BSPDMS = new BSPDMediaSource();
+            //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
+            //BSPDMS.OpenMedia(input);
           
+            BSPDMS = new BSPDMediaSource();
+            BSPDMS.OpenMedia(input);
+            System.Threading.Thread.Sleep(10);
+              
 
-            BSPDMS.Close();
+           // BSPDMS.Close();
             while (true)
             {
+                BSPDMS.CheckUpdate();
+                Thread.Sleep(33);
             //    BSPDMS.CheckUpdate();
-            BSPDMS = new BSPDMediaSource();
-            BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
-            BSPDMS.OpenMedia(input);
-            System.Threading.Thread.Sleep(10000);
-                BSPDMS.Close();
-              
             }
 
         }

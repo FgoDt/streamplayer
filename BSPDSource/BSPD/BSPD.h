@@ -40,6 +40,7 @@ extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, 
 
 extern "C" _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 
+extern "C" _DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *pts, int64_t *duration);
 
 extern "C" _DLLEXPORT BSPDPacketData* BSPDCreatePacket(BSPDContext *bspdctx,int *opcode);
 
