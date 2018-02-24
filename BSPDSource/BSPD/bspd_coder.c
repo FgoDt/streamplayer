@@ -311,7 +311,7 @@ int bc_parse_options(BSPDContext *ctx)
            arg = argv[j];
            if (0==strcmp(arg,"-d"))
            {
-               ctx->pCoder->LOGLEVEL = AV_LOG_DEBUG;
+               ctx->pCoder->LOGLEVEL = BSPD_LOG_DEBUG;
                j++;
                continue;
            }
@@ -1058,7 +1058,7 @@ int bc_log(BSPDContext *ctx,int LEVEL,const char *fmt, ...)
     {
         return BSPD_USE_NULL_ERROR;
     }
-    if (LEVEL < ctx->pCoder->LOGLEVEL)
+    if (LEVEL > ctx->pCoder->LOGLEVEL)
     {
         return BSPD_OP_OK;
     }
