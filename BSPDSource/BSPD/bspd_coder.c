@@ -278,7 +278,7 @@ int bc_parse_options(BSPDContext *ctx)
    if (index == NULL)
    {
        bspoption = ctx->options;
-       int stl = strlen(bspoption);
+       int stl = (int)strlen(bspoption);
        char argv[100][100] = { 0 };
        char temp[100] = { 0 };
        int i = 0;
@@ -503,6 +503,7 @@ int bc_init_coder(BSPDContext *ctx) {
         bc_log(ctx,BSPD_LOG_ERROR,"no codec found!");
         return BSPD_NO_CODEC_FOUND;
     }
+    bc_log(ctx, BSPD_LOG_DEBUG, "open codec codec_id: %d \n",ctx->pCoder->pCodecCtx->codec_id);
 #if __ANDROID_NDK__
     if(av_set_java_vm_flags == NULL) {
         AVCodec *MCCodec = NULL;
@@ -511,6 +512,7 @@ int bc_init_coder(BSPDContext *ctx) {
            // bc_log(ctx,BSPD_LOG_ERROR,"HAS MCCODEC");
             ctx->pCoder->pCodec = MCCodec;
             ctx->pCoder->pCodecCtx->codec_id = ctx->pCoder->pCodec->id;
+            bc_log(ctx, BSPD_LOG_DEBUG, "open android  mediacodec \n");
         }
     }
 #endif
@@ -534,6 +536,7 @@ int bc_init_coder(BSPDContext *ctx) {
             ctx->pCoder->pCodecCtx->pix_fmt = ctx->pCoder->hwPixFmt;
             ctx->pCoder->pCodecCtx->get_format = get_hw_format;
             ctx->pCoder->hwInitDone = !hw_decoder_init(ctx, hwType);
+            bc_log(ctx, BSPD_LOG_DEBUG, "hw decoder init done \n");
         }
     }
 
@@ -549,6 +552,8 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
 
+    bc_log(ctx, BSPD_LOG_DEBUG, "video codec open2 done \n");
+
     if (ctx->pCoder->hasAudio == 1 && ctx->pCoder->pACodecCtx !=NULL
         && avcodec_open2(ctx->pCoder->pACodecCtx,ctx->pCoder->pACodec,NULL)<0)
     {
@@ -556,6 +561,7 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
 
+    bc_log(ctx, BSPD_LOG_DEBUG, "audio codec open2 done \n");
     ctx->pCoder->pFrame = av_frame_alloc();
     if (ctx->pCoder->pFrame == NULL)
     {
@@ -563,6 +569,7 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_NO_MEMY;
     }
 
+    bc_log(ctx, BSPD_LOG_DEBUG,"pFrame alloc \n");
     ctx->pCoder->pFrameYUV = av_frame_alloc();
 
     if (ctx->pCoder->pFrameYUV == NULL)
@@ -570,16 +577,20 @@ int bc_init_coder(BSPDContext *ctx) {
         bc_log(ctx, BSPD_LOG_ERROR, "alloc frameyuv error no mem \n");
         return BSPD_NO_MEMY;
     }
+    bc_log(ctx, BSPD_LOG_DEBUG,"pFrameYUV alloc \n");
 
     ctx->pCoder->pBuf = (unsigned char *)malloc(av_image_get_buffer_size(
             AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height, 1));
 
-    if (ctx->pCoder->pBuf == NULL)
+    if (ctx->pCoder->pBuf == NULL && ctx->pCoder->pCodecCtx->width != 0 &&ctx->pCoder->pCodecCtx->height != 0)
     {
-        bc_log(ctx, BSPD_LOG_ERROR, "malloc pbuf error\n");
+        bc_log(ctx, BSPD_LOG_DEBUG,"pcoder->pbuf width:%d height:%d \n",ctx->pCoder->pCodecCtx->width,
+            ctx->pCoder->pCodecCtx->height);
+        bc_log(ctx, BSPD_LOG_ERROR, "malloc pbuf error \n");
         return BSPD_NO_MEMY;
     }
 
+    bc_log(ctx, BSPD_LOG_DEBUG,"pcoder->pbuf malloc done \n");
 
     av_image_fill_arrays(ctx->pCoder->pFrameYUV->data,
                          ctx->pCoder->pFrameYUV->linesize, ctx->pCoder->pBuf,
@@ -602,6 +613,7 @@ int bc_init_coder(BSPDContext *ctx) {
             AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
     }
 
+    bc_log(ctx, BSPD_LOG_DEBUG,"imgswsctx malloc done \n");
     if (ctx->pCoder->imgSwsCtx == NULL)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "create imgswsctx error \n");
@@ -622,8 +634,8 @@ int bc_init_coder(BSPDContext *ctx) {
         {
             sr = ctx->pCoder->pACodecCtx->sample_rate;
         }
-        int och = av_get_default_channel_layout(ch);
-        int ich = av_get_default_channel_layout(ctx->pCoder->pACodecCtx->channels);
+        int64_t och = av_get_default_channel_layout(ch);
+        int64_t ich = av_get_default_channel_layout(ctx->pCoder->pACodecCtx->channels);
         ctx->pCoder->pcmSwrCtx = swr_alloc();
         //unity3d pcm is flt fmt
         ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(ctx->pCoder->pcmSwrCtx, och,
@@ -631,6 +643,7 @@ int bc_init_coder(BSPDContext *ctx) {
             ctx->pCoder->pACodecCtx->sample_fmt, ctx->pCoder->pACodecCtx->sample_rate,
             0, NULL);
        int err = swr_init(ctx->pCoder->pcmSwrCtx);
+        bc_log(ctx, BSPD_LOG_DEBUG, "create pcmswrctx done \n");
        if (err != 0)
        {
            return BSPD_AVLIB_ERROR;
@@ -642,6 +655,7 @@ int bc_init_coder(BSPDContext *ctx) {
         bc_log(ctx, BSPD_LOG_ERROR, "malloc pcoder packet error \n");
         return BSPD_NO_MEMY;
     }
+        bc_log(ctx, BSPD_LOG_DEBUG, "avpacket alloc done \n");
 
     ctx->pCoder->initDone = 1;
     bc_log(ctx, BSPD_LOG_DEBUG, "init bspd coder done\n");
@@ -1135,8 +1149,7 @@ int bc_get_packet(BSPDContext *ctx, BSPDPacketData *pkt) {
 }
 
 int bc_decode_audio_packet(BSPDContext *ctx, BSPDPacketData *p) {
-    int sflags, rflags;
-    sflags =  avcodec_send_packet(ctx->pCoder->pCodecCtx, p->pkt);
+    return BSPD_AVLIB_ERROR;
 }
 int bc_decode_video_packet(BSPDContext *ctx, BSPDPacketData *p) {
     return BSPD_AVLIB_ERROR;

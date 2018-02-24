@@ -1,4 +1,4 @@
-#ifndef __BSPD_CODER_H__
+﻿#ifndef __BSPD_CODER_H__
 #define __BSPD_CODER_H__
 
 #if _WIN32|_WIN64

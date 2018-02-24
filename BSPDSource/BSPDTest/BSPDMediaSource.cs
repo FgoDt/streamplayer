@@ -220,7 +220,7 @@ namespace BSPDTest
 
             mBSPDCtx = BSPDCreateCtx();
             GC.SuppressFinalize(mBSPDCtx);
-            BSPDOpen(mBSPDCtx, PATH, "-d -timeout 1000 -ha -ch 2 ");
+            BSPDOpen(mBSPDCtx, PATH, "-d -timeout 1000");
 
             //int op = 123;
             //IntPtr pkt = BSPDCreatePacket(mBSPDCtx, ref op);
