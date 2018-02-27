@@ -18,7 +18,7 @@ namespace BSPDTest
 
 
         static string yuvfilepath = "./test.yuv";
-        static string input = "http://live-yf-hdl.huomaotv.cn/live/5fILSX.flv?from=huomaoroom";
+        static string input = "rtmp://192.168.1.1/live/test123";
        // static string input = "http://182.150.11.187/live-tx-hdl.huomaotv.cn/live/9eiHIY23992.flv?from=huomaoroom&dispatch_from=ztc10.230.33.209&utime=1518487699647";
         static BSPDMediaSource BSPDMS;
         
