@@ -12,6 +12,8 @@ BSPDSource/BSPD/x64/
 BSPDSource/.vs/
 .vscode/
 
+BSPDSource/BSPD/build/
+
 # Prerequisites
 *.d
 

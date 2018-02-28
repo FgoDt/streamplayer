@@ -37,7 +37,7 @@ _DLLEXPORT void BSPDTest();
 
 
 /**
- * ´´½¨½âÂëÊµÀý
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
  **/
 #ifdef __cplusplus
 extern "C"
@@ -45,7 +45,7 @@ extern "C"
 _DLLEXPORT BSPDContext* BSPDCreateCtx();
 
 /**
- * ´ò¿ªÁ÷
+ * ï¿½ï¿½ï¿½ï¿½
  * @param ctx the bsp ctx
  * @param input the media path can be http url rtmp url local path
  * @param option the bsp option 
@@ -61,8 +61,8 @@ _DLLEXPORT int BSPDOpen(BSPDContext *ctx ,char *input, char *options);
 
 
 /**
- * »ñÈ¡½âÂëºóµÄYUVÊý¾Ý
- * Êý¾Ý¸ñÊ½ÎªYUV420p
+ * ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½YUVï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½Ý¸ï¿½Ê½ÎªYUV420p
  * @param bspdctx the bsp ctx
  * @param ydata get y data
  * @param udata get u data
@@ -75,8 +75,8 @@ _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vda
 
 
 /**
- * »ñÈ¡½âÂëºóµÄYUVÊý¾ÝºÍÊ±¼ä
- * Êý¾Ý¸ñÊ½ÎªYUV420p
+ * ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½YUVï¿½ï¿½ï¿½Ýºï¿½Ê±ï¿½ï¿½
+ * ï¿½ï¿½ï¿½Ý¸ï¿½Ê½ÎªYUV420p
  * @param bspdctx the bsp ctx
  * @param ydata get y data
  * @param udata get u data
@@ -89,16 +89,16 @@ extern "C"
 #endif
 _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration);
 
-attribute_deprecated
+
 #ifdef __cplusplus
 extern "C"
 #endif
 _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 
 /**
-* »ñÈ¡½âÂëºóµÄÊý¾ÝºÍÊ±¼ä
-* videoÊý¾Ý¸ñÊ½ÎªYUV420p
-* audioÊý¾Ý¸ñÊ½Îªpcm float32
+* ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýºï¿½Ê±ï¿½ï¿½
+* videoï¿½ï¿½ï¿½Ý¸ï¿½Ê½ÎªYUV420p
+* audioï¿½ï¿½ï¿½Ý¸ï¿½Ê½Îªpcm float32
 * @param bspdctx the bsp ctx
 * @param ydata 
 *               if return is video ydata is y data
@@ -118,39 +118,34 @@ extern "C"
 #endif
 _DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *pts, int64_t *duration);
 
-attribute_deprecated
 #ifdef __cplusplus
 extern "C"
 #endif
 _DLLEXPORT BSPDPacketData* BSPDCreatePacket(BSPDContext *bspdctx,int *opcode);
 
-attribute_deprecated
 #ifdef __cplusplus
 extern "C"
 #endif
 _DLLEXPORT int BSPDGetPacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
-attribute_deprecated
 #ifdef __cplusplus
 extern "C"
 #endif
 _DLLEXPORT int BSPDDecodePacketV(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
-attribute_deprecated
 #ifdef __cplusplus
 extern "C"
 #endif
 _DLLEXPORT int BSPDDecodePacketA(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
-attribute_deprecated
 #ifdef __cplusplus
 extern "C"
 #endif
 _DLLEXPORT int BSPDFreePacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
 /**
- * ¹Ø±Õ½âÂëÆ÷
- * ·ÇÏß³Ì°²È«µÄ·½·¨ Ê¹ÓÃÇ°Ó¦¸Ãµ÷ÓÃ BSPDAbort(BSPDContext *bspdctx)
+ * ï¿½Ø±Õ½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ß³Ì°ï¿½È«ï¿½Ä·ï¿½ï¿½ï¿½ Ê¹ï¿½ï¿½Ç°Ó¦ï¿½Ãµï¿½ï¿½ï¿½ BSPDAbort(BSPDContext *bspdctx)
  * @param bspdctx is ctx
  **/
 #ifdef __cplusplus
@@ -159,7 +154,7 @@ extern "C"
 _DLLEXPORT int BSPDClose(BSPDContext *bspdctx);
 
 /**
- * ÉèÖÃLog»Øµ÷ Í¨¹ý»Øµ÷¿ÉÒÔ×Ô¶¨ÒåLOGÊä³ö
+ * ï¿½ï¿½ï¿½ï¿½Logï¿½Øµï¿½ Í¨ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½LOGï¿½ï¿½ï¿½
  * @param bspdctx bsp ctx
  * @param call callback func
  **/
@@ -169,8 +164,8 @@ extern "C"
 _DLLEXPORT int BSPDSetLogCallback(BSPDContext *bspdctx,BSPDLogCallback call);
 
 /**
- * ÖÕÖ¹ÕýÔÚ½øÐÐµÄ½âÂë²Ù×÷
- * ÓÐÐ©²Ù×÷»á±È½ÏºÄÊ± Ê¹ÓÃ´Ë·½·¨¿ÉÒÔ¿ìËÙÖÕÖ¹²Ù×÷
+ * ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ÐµÄ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½Ïºï¿½Ê± Ê¹ï¿½Ã´Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½
  * @param bspdctx is bsp ctx
  **/
 #ifdef __cplusplus

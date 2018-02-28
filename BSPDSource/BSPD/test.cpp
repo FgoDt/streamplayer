@@ -4,7 +4,7 @@ void test(){
 	printf("test in\n");
 	BSPDContext *ctx = BSPDCreateCtx();
 
-	BSPDOpen(ctx,"http:192.168.3.69/vod/cs.mkv","");
+	BSPDOpen(ctx,"http:192.168.3.69/vod/css.mkv","");
 
 	char *y,*u,*v;
 	int64_t t = 0;
@@ -24,9 +24,9 @@ void test(){
 	ctx = NULL;
 
 	BSPDGetYUVWithTime(ctx,y,u,v,&t,&t,&t,&t);
-	BSPDOpen(ctx,"http:192.168.3.69/vod/cs.mkv","");
+	BSPDOpen(ctx,"rtmp://live.hkstv.hk.lxdns.com/live/hks","");
 	BSPDGetYUVWithTime(ctx,y,u,v,&t,&t,&t,&t);
-	BSPDOpen(ctx,"http:192.168.3.69/vod/cs.mkv","");
+	BSPDOpen(ctx,"rtmp://live.hkstv.hk.lxdns.com/live/hks","");
 	BSPDClose(ctx);
 
 	free(y);
