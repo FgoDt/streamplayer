@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		330EE352204533A90075F6EE /* BSPD.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 330EE350204533A90075F6EE /* BSPD.cpp */; };
-		330EE353204533A90075F6EE /* bspd_coder.c in Sources */ = {isa = PBXBuildFile; fileRef = 330EE351204533A90075F6EE /* bspd_coder.c */; };
 		330EE35C204535110075F6EE /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE355204535110075F6EE /* libswscale.a */; };
 		330EE35D204535110075F6EE /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE356204535110075F6EE /* libavcodec.a */; };
 		330EE35E204535110075F6EE /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE357204535110075F6EE /* libswresample.a */; };
@@ -32,10 +30,6 @@
 
 /* Begin PBXFileReference section */
 		330EE3422045335A0075F6EE /* libBSPD.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBSPD.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		330EE34E204533A90075F6EE /* BSPD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSPD.h; path = ../../BSPDSample/BSPDSample/BSPD.h; sourceTree = "<group>"; };
-		330EE34F204533A90075F6EE /* bspd_coder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bspd_coder.h; path = ../../BSPDSample/BSPDSample/bspd_coder.h; sourceTree = "<group>"; };
-		330EE350204533A90075F6EE /* BSPD.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BSPD.cpp; path = ../../../BSPDSource/BSPD/BSPD.cpp; sourceTree = "<group>"; };
-		330EE351204533A90075F6EE /* bspd_coder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bspd_coder.c; path = ../../../BSPDSource/BSPD/bspd_coder.c; sourceTree = "<group>"; };
 		330EE355204535110075F6EE /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libswscale.a; sourceTree = "<group>"; };
 		330EE356204535110075F6EE /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavcodec.a; sourceTree = "<group>"; };
 		330EE357204535110075F6EE /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libswresample.a; sourceTree = "<group>"; };
@@ -66,7 +60,6 @@
 		330EE3392045335A0075F6EE = {
 			isa = PBXGroup;
 			children = (
-				330EE3442045335A0075F6EE /* BSPD */,
 				330EE3432045335A0075F6EE /* Products */,
 				330EE354204535110075F6EE /* Frameworks */,
 			);
@@ -78,17 +71,6 @@
 				330EE3422045335A0075F6EE /* libBSPD.a */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		330EE3442045335A0075F6EE /* BSPD */ = {
-			isa = PBXGroup;
-			children = (
-				330EE351204533A90075F6EE /* bspd_coder.c */,
-				330EE34F204533A90075F6EE /* bspd_coder.h */,
-				330EE350204533A90075F6EE /* BSPD.cpp */,
-				330EE34E204533A90075F6EE /* BSPD.h */,
-			);
-			path = BSPD;
 			sourceTree = "<group>";
 		};
 		330EE354204535110075F6EE /* Frameworks */ = {
@@ -162,8 +144,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				330EE353204533A90075F6EE /* bspd_coder.c in Sources */,
-				330EE352204533A90075F6EE /* BSPD.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
