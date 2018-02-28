@@ -7,14 +7,19 @@
 #define _DLLEXPORT 
 #endif
 
+#ifdef __cplusplus
 extern "C"{
+#endif
+    
 #include "bspd_coder.h"
 #if __ANDROID_NDK__
 #include <libavcodec/jni.h>
 #endif
 
 #include <time.h>
+#ifdef __cplusplus
 }
+#endif
 
 
 typedef struct {
@@ -25,14 +30,19 @@ typedef struct {
 }MCtx;
 
 
-
-extern "C" _DLLEXPORT void BSPDTest();
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT void BSPDTest();
 
 
 /**
  * 创建解码实例
  **/
-extern "C" _DLLEXPORT BSPDContext* BSPDCreateCtx();
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT BSPDContext* BSPDCreateCtx();
 
 /**
  * 打开流
@@ -44,7 +54,10 @@ extern "C" _DLLEXPORT BSPDContext* BSPDCreateCtx();
  *          -ch audio channels
  *          -sr audio sample rate
  **/
-extern "C" _DLLEXPORT int BSPDOpen(BSPDContext *ctx ,char *input, char *options);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDOpen(BSPDContext *ctx ,char *input, char *options);
 
 
 /**
@@ -55,7 +68,10 @@ extern "C" _DLLEXPORT int BSPDOpen(BSPDContext *ctx ,char *input, char *options)
  * @param udata get u data
  * @param vdata get v data
  **/
-extern "C" _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vdata);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vdata);
 
 
 /**
@@ -68,10 +84,16 @@ extern "C" _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udat
  * @param vpts video pts
  * @param vduration video duration
  **/
-extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration);
 
 attribute_deprecated
-extern "C" _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 
 /**
 * 获取解码后的数据和时间
@@ -91,42 +113,69 @@ extern "C" _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 *         2 for audio data 
 *         other for error 
 **/
-extern "C" _DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *pts, int64_t *duration);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *pts, int64_t *duration);
 
 attribute_deprecated
-extern "C" _DLLEXPORT BSPDPacketData* BSPDCreatePacket(BSPDContext *bspdctx,int *opcode);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT BSPDPacketData* BSPDCreatePacket(BSPDContext *bspdctx,int *opcode);
 
 attribute_deprecated
-extern "C" _DLLEXPORT int BSPDGetPacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDGetPacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
 attribute_deprecated
-extern "C" _DLLEXPORT int BSPDDecodePacketV(BSPDContext *bspdctx,BSPDPacketData *pkt);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDDecodePacketV(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
 attribute_deprecated
-extern "C" _DLLEXPORT int BSPDDecodePacketA(BSPDContext *bspdctx,BSPDPacketData *pkt);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDDecodePacketA(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
 attribute_deprecated
-extern "C" _DLLEXPORT int BSPDFreePacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDFreePacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
 /**
  * 关闭解码器
  * 非线程安全的方法 使用前应该调用 BSPDAbort(BSPDContext *bspdctx)
  * @param bspdctx is ctx
  **/
-extern "C" _DLLEXPORT int BSPDClose(BSPDContext *bspdctx);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDClose(BSPDContext *bspdctx);
 
 /**
  * 设置Log回调 通过回调可以自定义LOG输出
  * @param bspdctx bsp ctx
  * @param call callback func
  **/
-extern "C" _DLLEXPORT int BSPDSetLogCallback(BSPDContext *bspdctx,BSPDLogCallback call);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDSetLogCallback(BSPDContext *bspdctx,BSPDLogCallback call);
 
 /**
  * 终止正在进行的解码操作
  * 有些操作会比较耗时 使用此方法可以快速终止操作
  * @param bspdctx is bsp ctx
  **/
-extern "C" _DLLEXPORT int BSPDAbort(BSPDContext *bspdctx);
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDAbort(BSPDContext *bspdctx);
 
 #endif // ! __BSPD_H__

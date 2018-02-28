@@ -1,4 +1,4 @@
-﻿// BSPD.cpp: 定义 DLL 应用程序的导出函数。
+// BSPD.cpp: 定义 DLL 应用程序的导出函数。
 
 #include "BSPD.h"
 

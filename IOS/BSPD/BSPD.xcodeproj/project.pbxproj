@@ -1,0 +1,327 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 48;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		330EE352204533A90075F6EE /* BSPD.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 330EE350204533A90075F6EE /* BSPD.cpp */; };
+		330EE353204533A90075F6EE /* bspd_coder.c in Sources */ = {isa = PBXBuildFile; fileRef = 330EE351204533A90075F6EE /* bspd_coder.c */; };
+		330EE35C204535110075F6EE /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE355204535110075F6EE /* libswscale.a */; };
+		330EE35D204535110075F6EE /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE356204535110075F6EE /* libavcodec.a */; };
+		330EE35E204535110075F6EE /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE357204535110075F6EE /* libswresample.a */; };
+		330EE35F204535110075F6EE /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE358204535110075F6EE /* libavdevice.a */; };
+		330EE360204535110075F6EE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE359204535110075F6EE /* libavutil.a */; };
+		330EE361204535110075F6EE /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE35A204535110075F6EE /* libavfilter.a */; };
+		330EE363204535C90075F6EE /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE35B204535110075F6EE /* libavformat.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		330EE3402045335A0075F6EE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		330EE3422045335A0075F6EE /* libBSPD.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBSPD.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		330EE34E204533A90075F6EE /* BSPD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSPD.h; path = ../../BSPDSample/BSPDSample/BSPD.h; sourceTree = "<group>"; };
+		330EE34F204533A90075F6EE /* bspd_coder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bspd_coder.h; path = ../../BSPDSample/BSPDSample/bspd_coder.h; sourceTree = "<group>"; };
+		330EE350204533A90075F6EE /* BSPD.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BSPD.cpp; path = ../../../BSPDSource/BSPD/BSPD.cpp; sourceTree = "<group>"; };
+		330EE351204533A90075F6EE /* bspd_coder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bspd_coder.c; path = ../../../BSPDSource/BSPD/bspd_coder.c; sourceTree = "<group>"; };
+		330EE355204535110075F6EE /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libswscale.a; sourceTree = "<group>"; };
+		330EE356204535110075F6EE /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavcodec.a; sourceTree = "<group>"; };
+		330EE357204535110075F6EE /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libswresample.a; sourceTree = "<group>"; };
+		330EE358204535110075F6EE /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavdevice.a; sourceTree = "<group>"; };
+		330EE359204535110075F6EE /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavutil.a; sourceTree = "<group>"; };
+		330EE35A204535110075F6EE /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavfilter.a; sourceTree = "<group>"; };
+		330EE35B204535110075F6EE /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavformat.a; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		330EE33F2045335A0075F6EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				330EE363204535C90075F6EE /* libavformat.a in Frameworks */,
+				330EE35C204535110075F6EE /* libswscale.a in Frameworks */,
+				330EE35D204535110075F6EE /* libavcodec.a in Frameworks */,
+				330EE35E204535110075F6EE /* libswresample.a in Frameworks */,
+				330EE35F204535110075F6EE /* libavdevice.a in Frameworks */,
+				330EE360204535110075F6EE /* libavutil.a in Frameworks */,
+				330EE361204535110075F6EE /* libavfilter.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		330EE3392045335A0075F6EE = {
+			isa = PBXGroup;
+			children = (
+				330EE3442045335A0075F6EE /* BSPD */,
+				330EE3432045335A0075F6EE /* Products */,
+				330EE354204535110075F6EE /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		330EE3432045335A0075F6EE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				330EE3422045335A0075F6EE /* libBSPD.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		330EE3442045335A0075F6EE /* BSPD */ = {
+			isa = PBXGroup;
+			children = (
+				330EE351204533A90075F6EE /* bspd_coder.c */,
+				330EE34F204533A90075F6EE /* bspd_coder.h */,
+				330EE350204533A90075F6EE /* BSPD.cpp */,
+				330EE34E204533A90075F6EE /* BSPD.h */,
+			);
+			path = BSPD;
+			sourceTree = "<group>";
+		};
+		330EE354204535110075F6EE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				330EE356204535110075F6EE /* libavcodec.a */,
+				330EE358204535110075F6EE /* libavdevice.a */,
+				330EE35A204535110075F6EE /* libavfilter.a */,
+				330EE35B204535110075F6EE /* libavformat.a */,
+				330EE359204535110075F6EE /* libavutil.a */,
+				330EE357204535110075F6EE /* libswresample.a */,
+				330EE355204535110075F6EE /* libswscale.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		330EE3412045335A0075F6EE /* BSPD */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 330EE34B2045335A0075F6EE /* Build configuration list for PBXNativeTarget "BSPD" */;
+			buildPhases = (
+				330EE33E2045335A0075F6EE /* Sources */,
+				330EE33F2045335A0075F6EE /* Frameworks */,
+				330EE3402045335A0075F6EE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BSPD;
+			productName = BSPD;
+			productReference = 330EE3422045335A0075F6EE /* libBSPD.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		330EE33A2045335A0075F6EE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0920;
+				ORGANIZATIONNAME = fgodt;
+				TargetAttributes = {
+					330EE3412045335A0075F6EE = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 330EE33D2045335A0075F6EE /* Build configuration list for PBXProject "BSPD" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 330EE3392045335A0075F6EE;
+			productRefGroup = 330EE3432045335A0075F6EE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				330EE3412045335A0075F6EE /* BSPD */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		330EE33E2045335A0075F6EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				330EE353204533A90075F6EE /* bspd_coder.c in Sources */,
+				330EE352204533A90075F6EE /* BSPD.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		330EE3492045335A0075F6EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		330EE34A2045335A0075F6EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		330EE34C2045335A0075F6EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = ../../ThirdPartyLibs/FFmpeg/include;
+				LIBRARY_SEARCH_PATHS = ../../ThirdPartyLibs/FFmpeg/lib;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		330EE34D2045335A0075F6EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = ../../ThirdPartyLibs/FFmpeg/include;
+				LIBRARY_SEARCH_PATHS = ../../ThirdPartyLibs/FFmpeg/lib;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		330EE33D2045335A0075F6EE /* Build configuration list for PBXProject "BSPD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				330EE3492045335A0075F6EE /* Debug */,
+				330EE34A2045335A0075F6EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		330EE34B2045335A0075F6EE /* Build configuration list for PBXNativeTarget "BSPD" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				330EE34C2045335A0075F6EE /* Debug */,
+				330EE34D2045335A0075F6EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 330EE33A2045335A0075F6EE /* Project object */;
+}
