@@ -14,6 +14,8 @@
 		330EE360204535110075F6EE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE359204535110075F6EE /* libavutil.a */; };
 		330EE361204535110075F6EE /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE35A204535110075F6EE /* libavfilter.a */; };
 		330EE363204535C90075F6EE /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 330EE35B204535110075F6EE /* libavformat.a */; };
+		331865D9204684C7008F12C4 /* bspd_coder.c in Sources */ = {isa = PBXBuildFile; fileRef = 331865D7204684C7008F12C4 /* bspd_coder.c */; };
+		331865DA204684C7008F12C4 /* BSPD.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 331865D8204684C7008F12C4 /* BSPD.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +39,8 @@
 		330EE359204535110075F6EE /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavutil.a; sourceTree = "<group>"; };
 		330EE35A204535110075F6EE /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavfilter.a; sourceTree = "<group>"; };
 		330EE35B204535110075F6EE /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ../../ThirdPartyLibs/FFmpeg/lib/libavformat.a; sourceTree = "<group>"; };
+		331865D7204684C7008F12C4 /* bspd_coder.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = bspd_coder.c; path = ../../BSPDSource/BSPD/bspd_coder.c; sourceTree = "<group>"; };
+		331865D8204684C7008F12C4 /* BSPD.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = BSPD.cpp; path = ../../BSPDSource/BSPD/BSPD.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,8 @@
 		330EE3392045335A0075F6EE = {
 			isa = PBXGroup;
 			children = (
+				331865D7204684C7008F12C4 /* bspd_coder.c */,
+				331865D8204684C7008F12C4 /* BSPD.cpp */,
 				330EE3432045335A0075F6EE /* Products */,
 				330EE354204535110075F6EE /* Frameworks */,
 			);
@@ -144,6 +150,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				331865D9204684C7008F12C4 /* bspd_coder.c in Sources */,
+				331865DA204684C7008F12C4 /* BSPD.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
