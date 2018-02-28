@@ -49,7 +49,9 @@ $ make
 you need xcode and ffmpeg static lib 
 
 copy you ffmpeg lib to *ThirdPartyLibs/FFmpeg/lib*
+
 copy you ffmpeg include to *ThirdPartyLibs/FFmpeg/include*
 
+in path IOS/BSPDSample has a sample example to show how decode video and render yuv data use opengles
 
 
