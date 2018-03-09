@@ -18,15 +18,19 @@ namespace BSPDTest
 
 
         static string yuvfilepath = "./test.yuv";
-        static string input = "rtmp://192.168.1.1/live/test123";
+        static string input = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
        // static string input = "http://182.150.11.187/live-tx-hdl.huomaotv.cn/live/9eiHIY23992.flv?from=huomaoroom&dispatch_from=ztc10.230.33.209&utime=1518487699647";
         static BSPDMediaSource BSPDMS;
+
         
         static void Main(string[] args)
         {
             //BSPDMS = new BSPDMediaSource();
             //BSPDMS.MediaStateChage += BSPDMS_MediaStateChage;
             //BSPDMS.OpenMedia(input);
+
+
+
           
             BSPDMS = new BSPDMediaSource();
             BSPDMS.OpenMedia(input);

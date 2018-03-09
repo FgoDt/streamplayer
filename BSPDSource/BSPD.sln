@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BSPD", "BSPD\BSPD.vcxproj", "{E2C87B6B-DB5D-4E50-8779-FA69355968BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSPDTest", "BSPDTest\BSPDTest.csproj", "{7C62820C-B646-4DD5-BA5F-62AC6857095C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BSPDSample", "BSPDSample\BSPDSample.vcxproj", "{4032439C-A11B-440C-B8F8-6CAD102E0680}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,16 @@ Global
 		{7C62820C-B646-4DD5-BA5F-62AC6857095C}.Release|x64.Build.0 = Release|Any CPU
 		{7C62820C-B646-4DD5-BA5F-62AC6857095C}.Release|x86.ActiveCfg = Release|Any CPU
 		{7C62820C-B646-4DD5-BA5F-62AC6857095C}.Release|x86.Build.0 = Release|Any CPU
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Debug|x64.ActiveCfg = Debug|x64
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Debug|x64.Build.0 = Debug|x64
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Debug|x86.ActiveCfg = Debug|Win32
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Debug|x86.Build.0 = Debug|Win32
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Release|Any CPU.ActiveCfg = Release|Win32
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Release|x64.ActiveCfg = Release|x64
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Release|x64.Build.0 = Release|x64
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Release|x86.ActiveCfg = Release|Win32
+		{4032439C-A11B-440C-B8F8-6CAD102E0680}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

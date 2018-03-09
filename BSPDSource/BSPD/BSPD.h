@@ -178,4 +178,15 @@ extern "C"
 #endif
 _DLLEXPORT int BSPDAbort(BSPDContext *bspdctx);
 
+/**
+ * 获取视频流解码后的宽和高
+ * @param bspdctx bspdctx is bsp ctx
+ * @param w w is video width
+ * #param h h is video height
+ */
+#ifdef __cplusplus
+extern "C"
+#endif
+_DLLEXPORT int BSPDGetDecWH(BSPDContext *bspdctx, int *w, int *h);
+
 #endif // ! __BSPD_H__

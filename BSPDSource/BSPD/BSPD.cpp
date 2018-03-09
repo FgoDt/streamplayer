@@ -20,8 +20,8 @@ _DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext * bspdctx, char * ydata, char 
     if (ret == 1)
     {
         memcpy(ydata, bspdctx->pCoder->pFrameYUV->data[0], bspdctx->ysize);
-        memcpy(ydata, bspdctx->pCoder->pFrameYUV->data[1], bspdctx->ysize/4);
-        memcpy(ydata, bspdctx->pCoder->pFrameYUV->data[2], bspdctx->ysize/4);
+        memcpy(udata, bspdctx->pCoder->pFrameYUV->data[1], bspdctx->ysize/4);
+        memcpy(vdata, bspdctx->pCoder->pFrameYUV->data[2], bspdctx->ysize/4);
         *pts = bspdctx->timeStamp;
         *duration = bspdctx->vDuration;
     }
