@@ -35,7 +35,7 @@ you need visual studio 2017
 ### *nix 
 you need cmake, ffmpeg lib
 
-change CMakeLists.txt include/link path
+change CMakeLists.txt include/link path or copy ffmpeg *inlude and libs file* to *ThirdPartyLibs/FFmpeg*
 
 ```shell
 $ mkdir build
@@ -46,7 +46,12 @@ $ make
 ### android
 
 ### ios
+you need xcode and ffmpeg static lib 
 
+copy you ffmpeg lib to *ThirdPartyLibs/FFmpeg/lib*
 
+copy you ffmpeg include to *ThirdPartyLibs/FFmpeg/include*
+
+in path IOS/BSPDSample has a sample example to show how decode video and render yuv data use opengles
 
 
