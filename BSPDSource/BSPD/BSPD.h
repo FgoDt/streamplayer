@@ -1,4 +1,4 @@
-#ifndef __BSPD_H__
+﻿#ifndef __BSPD_H__
 #define __BSPD_H__
 
 #if _WIN32||_WIN64
@@ -37,7 +37,7 @@ _DLLEXPORT void BSPDTest();
 
 
 /**
- * ��������ʵ��
+ * 创建解码实例
  **/
 #ifdef __cplusplus
 extern "C"
@@ -45,7 +45,7 @@ extern "C"
 _DLLEXPORT BSPDContext* BSPDCreateCtx();
 
 /**
- * ����
+ * 打开流
  * @param ctx the bsp ctx
  * @param input the media path can be http url rtmp url local path
  * @param option the bsp option 
@@ -61,8 +61,8 @@ _DLLEXPORT int BSPDOpen(BSPDContext *ctx ,char *input, char *options);
 
 
 /**
- * ��ȡ������YUV����
- * ���ݸ�ʽΪYUV420p
+ * 获取解码后的YUV数据
+ * 数据格式为YUV420p
  * @param bspdctx the bsp ctx
  * @param ydata get y data
  * @param udata get u data
@@ -75,8 +75,8 @@ _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vda
 
 
 /**
- * ��ȡ������YUV���ݺ�ʱ��
- * ���ݸ�ʽΪYUV420p
+ * 获取解码后的YUV数据和时间
+ * 数据格式为YUV420p
  * @param bspdctx the bsp ctx
  * @param ydata get y data
  * @param udata get u data
@@ -87,8 +87,7 @@ _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vda
 #ifdef __cplusplus
 extern "C"
 #endif
-_DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration);
-
+_DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, long *vpts, long *apts, long *vduration, long *aduration);
 
 #ifdef __cplusplus
 extern "C"
@@ -96,9 +95,9 @@ extern "C"
 _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata);
 
 /**
-* ��ȡ���������ݺ�ʱ��
-* video���ݸ�ʽΪYUV420p
-* audio���ݸ�ʽΪpcm float32
+* 获取解码后的数据和时间
+* video数据格式为YUV420p
+* audio数据格式为pcm float32
 * @param bspdctx the bsp ctx
 * @param ydata 
 *               if return is video ydata is y data
@@ -144,8 +143,8 @@ extern "C"
 _DLLEXPORT int BSPDFreePacket(BSPDContext *bspdctx,BSPDPacketData *pkt);
 
 /**
- * �رս�����
- * ���̰߳�ȫ�ķ��� ʹ��ǰӦ�õ��� BSPDAbort(BSPDContext *bspdctx)
+ * 关闭解码器
+ * 非线程安全的方法 使用前应该调用 BSPDAbort(BSPDContext *bspdctx)
  * @param bspdctx is ctx
  **/
 #ifdef __cplusplus
@@ -154,7 +153,7 @@ extern "C"
 _DLLEXPORT int BSPDClose(BSPDContext *bspdctx);
 
 /**
- * ����Log�ص� ͨ���ص������Զ���LOG���
+ * 设置Log回调 通过回调可以自定义LOG输出
  * @param bspdctx bsp ctx
  * @param call callback func
  **/
@@ -164,8 +163,8 @@ extern "C"
 _DLLEXPORT int BSPDSetLogCallback(BSPDContext *bspdctx,BSPDLogCallback call);
 
 /**
- * ��ֹ���ڽ��еĽ������
- * ��Щ������ȽϺ�ʱ ʹ�ô˷������Կ�����ֹ����
+ * 终止正在进行的解码操作
+ * 有些操作会比较耗时 使用此方法可以快速终止操作
  * @param bspdctx is bsp ctx
  **/
 #ifdef __cplusplus
@@ -174,7 +173,7 @@ extern "C"
 _DLLEXPORT int BSPDAbort(BSPDContext *bspdctx);
 
 /**
- * ��ȡ��Ƶ�������Ŀ��͸�
+ * 获取视频流解码后的宽和高
  * @param bspdctx bspdctx is bsp ctx
  * @param w w is video width
  * #param h h is video height
@@ -183,5 +182,17 @@ _DLLEXPORT int BSPDAbort(BSPDContext *bspdctx);
 extern "C"
 #endif
 _DLLEXPORT int BSPDGetDecWH(BSPDContext *bspdctx, int *w, int *h);
+
+/**
+ * 获取媒体中音频的数据
+ * @param bspdctx is bsp ctx
+ * @param sr audio samplerate
+ * @param ch audio channel
+ **/
+#ifdef __cplusplus
+extern "C"
+#endif // __cplusplus
+_DLLEXPORT int BSPDGetAudioCfg(BSPDContext *bspdctx, int *sr, int *ch);
+
 
 #endif // ! __BSPD_H__

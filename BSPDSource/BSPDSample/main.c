@@ -10,7 +10,9 @@
 
 typedef void* (*BSPDCreateCtx)();
 typedef int(*BSPDOpen)(void *ctx, char* input, char *options);
-typedef int(*BSPDGetYUV)(void *ctx, char* ydata, char *udata, char *vdata);
+typedef int(*BSPDGetYUV)(void *ctx, char *ydata, char *udata, char *vdata, long *vpts, long *apts, long *vduration, long *aduration);
+typedef int(*BSPDGetDecWH)(void *ctx, int *w, int *h);
+typedef int(*BSPDGetAudioCfg)(void *ctx, int *sr, int *ch);
 
 
 static const GLfloat vertexVertices[] = {
@@ -113,13 +115,21 @@ int main(void)
     }
         BSPDCreateCtx createfunc = (BSPDCreateCtx)GetProcAddress(hdll, "BSPDCreateCtx");
         BSPDOpen openfunc = (BSPDOpen)GetProcAddress(hdll, "BSPDOpen");
-        BSPDGetYUV getyuvfunc = (BSPDGetYUV)GetProcAddress(hdll, "BSPDGetYUV");
+        BSPDGetYUV getyuvfunc = (BSPDGetYUV)GetProcAddress(hdll, "BSPDGetYUVWithTime");
+        BSPDGetDecWH getdecwh = (BSPDGetDecWH)GetProcAddress(hdll, "BSPDGetDecWH");
+        BSPDGetAudioCfg getaudiocfg = (BSPDGetAudioCfg)GetProcAddress(hdll, "BSPDGetAudioCfg");
 
         void* ctx = createfunc();
-        int f = openfunc(ctx, (char*)"f:\css.mkv", (char*)"-d");
-        char* ydata = (char*)malloc(1280 * 720  );
-        char* udata = (char*)malloc(1280 * 720 /4 );
-        char* vdata = (char*)malloc(1280 * 720  /4);
+        int f = openfunc(ctx, (char*)"f:\css.mkv", (char*)"-d -psize 36000 -ha");
+        int w = 120;
+        int h = 180;
+
+        getdecwh(ctx, &w, &h);
+  
+
+        char* ydata = (char*)malloc(w * h);
+        char* udata = (char*)malloc(w * h/4 );
+        char* vdata = (char*)malloc(w * h/4);
   
     GLFWwindow* window;
     GLuint vertex_shader, fragment_shader, program;
@@ -137,7 +147,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
 
-    window = glfwCreateWindow(480, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -207,9 +217,10 @@ int main(void)
 
 
 
+    long t;
     while (!glfwWindowShouldClose(window))
     {
-        f = getyuvfunc(ctx, ydata, udata, vdata);
+        f = getyuvfunc(ctx, ydata, udata, vdata,&t,&t,&t,&t);
         if (f!=0)
         {
             break;
@@ -217,17 +228,17 @@ int main(void)
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, id_y);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1280, 720, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ydata);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ydata);
         glUniform1i(tex_y, 0);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, id_u);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1280/2, 720/2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, udata);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w/2, h/2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, udata);
         glUniform1i(tex_u, 1);
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, id_v);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1280/2, 720/2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, vdata);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w/2, h/2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, vdata);
         glUniform1i(tex_v,2) ;
 
         float ratio;

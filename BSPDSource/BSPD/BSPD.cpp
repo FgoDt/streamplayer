@@ -13,7 +13,7 @@ _DLLEXPORT int BSPDGetPCM(BSPDContext *bspdctx, char *rawdata) {
     return BSPD_ERRO_UNDEFINE;
 }
 
-_DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext * bspdctx, char * ydata, char * udata, char * vdata, int64_t * pts, int64_t * duration)
+_DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext * bspdctx, char * ydata, char * udata, char * vdata, int64_t * pts, int64_t* duration)
 {
     int ret = bc_get_raw(bspdctx);
 
@@ -100,6 +100,7 @@ _DLLEXPORT int  BSPDOpen(BSPDContext *ctx, char * input, char * options)
     ctx->inputPath[slen]= '\0';
     memcpy(ctx->inputPath, input, slen);
 
+    bc_log(ctx,BSPD_LOG_DEBUG, "BSPDOpen try set options \n",input);
     flags |= bc_set_default_options(ctx);
     if (options)
     {
@@ -117,6 +118,8 @@ _DLLEXPORT int  BSPDOpen(BSPDContext *ctx, char * input, char * options)
             flags |= bc_parse_options(ctx);
         }
     }
+
+    bc_log(ctx,BSPD_LOG_DEBUG, "BSPDOpen set options done \n",input);
 
     flags |= bc_init_coder(ctx);
 
@@ -147,7 +150,7 @@ _DLLEXPORT int BSPDGetYUV(BSPDContext *bspdctx,char *ydata,char *udata,char *vda
     return BSPD_ERRO_UNDEFINE;
 }
 
-extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, int64_t *vpts, int64_t *apts, int64_t *vduration, int64_t *aduration) {
+extern "C" _DLLEXPORT int BSPDGetYUVWithTime(BSPDContext *bspdctx, char *ydata, char *udata, char *vdata, long *vpts, long *apts, long *vduration, long *aduration) {
     int retval = BSPDGetYUV(bspdctx, ydata, udata, vdata);
     if (retval == BSPD_OP_OK)
     {
@@ -256,6 +259,32 @@ _DLLEXPORT int BSPDAbort(BSPDContext *ctx){
         return BSPD_USE_NULL_ERROR;
     }
     ctx->bspd_hb_abort = 0xff00ff;
+    return BSPD_OP_OK;
+}
+
+_DLLEXPORT int BSPDGetDecWH(BSPDContext * bspdctx, int * w, int * h)
+{
+    if (BSPDISNULL(bspdctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    *w = bspdctx->pCoder->pCodecCtx->width;
+    *h = bspdctx->pCoder->pCodecCtx->height;
+
+    return BSPD_OP_OK;
+}
+
+_DLLEXPORT int BSPDGetAudioCfg(BSPDContext * bspdctx, int * sr, int * ch)
+{
+    if (BSPDISNULL(bspdctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    *sr = bspdctx->pCoder->pACodecCtx->sample_rate;
+    *ch = bspdctx->pCoder->pACodecCtx->channels;
+
     return BSPD_OP_OK;
 }
 

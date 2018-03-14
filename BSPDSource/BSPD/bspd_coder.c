@@ -419,6 +419,7 @@ int bc_init_coder(BSPDContext *ctx) {
     ctx->pCoder->pFormatCtx->probesize = ctx->pCoder->pSize;
     /////
 
+
     //ctx->hb = 0;
     if (avformat_open_input(&ctx->pCoder->pFormatCtx,ctx->inputPath,NULL,NULL)!=0)
     {
@@ -469,6 +470,7 @@ int bc_init_coder(BSPDContext *ctx) {
     if (ctx->pCoder->fAIndex == -1)
     {
         bc_log(ctx, BSPD_LOG_DEBUG, "no audio find\n");
+        ctx->pCoder->hasAudio = 0;
     }
 
     //init audio codec
@@ -598,6 +600,11 @@ int bc_init_coder(BSPDContext *ctx) {
                          AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width,
                          ctx->pCoder->pCodecCtx->height, 1);
 
+    if (ctx->pCoder->pCodecCtx->width*ctx->pCoder->pCodecCtx->height <= 32)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "open media err w*h less 32 maybe psize too small \n");
+        return BSPD_AVLIB_ERROR;
+    }
     if (ctx->pCoder->useHW&&ctx->pCoder->hwInitDone)
     {
         //硬编码获得的纹理是nv12格式
@@ -621,7 +628,7 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_AVLIB_ERROR;
     }
 
-    if (ctx->pCoder->hasAudio)
+    if (ctx->pCoder->hasAudio == 1)
     {
         int sr = 0, ch = 0;
         sr = ctx->pCoder->sampleRate;
