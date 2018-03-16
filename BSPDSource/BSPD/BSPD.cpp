@@ -28,7 +28,7 @@ _DLLEXPORT int BSPDGetRawDataWithTime(BSPDContext * bspdctx, char * ydata, char 
     else if(ret == 2)
     {
         int asize = bspdctx->pCoder->pSize;
-        memcpy(ydata, bspdctx->pCoder->pBuf, bspdctx->pCoder->pSize);
+        memcpy(ydata, bspdctx->pCoder->pAudioBuf, bspdctx->pCoder->pSize);
         udata[0] = (asize >> 24) & 0xff;
         udata[1] = (asize >> 16) & 0xff;
         udata[2] = (asize >> 8) & 0xff;

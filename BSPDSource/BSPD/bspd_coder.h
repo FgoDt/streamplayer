@@ -53,6 +53,16 @@ static int av_set_java_vm_flags;
 
 typedef void( *BSPDLogCallback)(char *log);
 
+typedef struct AudioParams {
+    int freq;
+    int channels;
+    int64_t channel_layout;
+    enum AVSampleFormat fmt;
+    int frame_size;
+    int bytes_per_sec;
+}AudioParams;
+
+
 typedef	struct {
     AVFormatContext *pFormatCtx;
     AVCodecContext	*pCodecCtx;
@@ -60,6 +70,7 @@ typedef	struct {
     AVCodecContext  *pACodecCtx;
     AVCodec         *pACodec;
     AVFrame			*pFrame;
+    AVFrame         *pAFrame;
     AVFrame			*pFrameYUV;
     AVFrame         *pPcmFrame;
     struct SwsContext *imgSwsCtx;
@@ -67,7 +78,8 @@ typedef	struct {
     AVPacket		*packet;
     AVDictionary	*optDic;
     unsigned char	*pBuf; //temp buf use to rw frame data
-    int             pSize;
+    uint8_t         *pAudioBuf;// audio raw data
+    long             pSize;
     int				LOGLEVEL;
     int				fVIndex;//first video stream index
     int             fAIndex;//first audio stream index
@@ -88,6 +100,8 @@ typedef	struct {
     int             hasAudio;
     int             channles;
     int             sampleRate;
+    AudioParams     audio_tgt;
+    AudioParams     audio_src;
 //    FDCCtx          *fdcCtx;
  //   FDCCtx          *fdSCtx;
 }BSPDCoder;
@@ -120,6 +134,7 @@ typedef struct BSPDPacketData {
     int                 closeMark;
     int                 freeMark;
 }BSPDPacketData;
+
 
 /**
 * BSPD context

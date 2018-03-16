@@ -572,6 +572,13 @@ int bc_init_coder(BSPDContext *ctx) {
         return BSPD_NO_MEMY;
     }
 
+    ctx->pCoder->pAFrame = av_frame_alloc();
+    if (ctx->pCoder->pAFrame == NULL)
+    {
+        bc_log(ctx, BSPD_LOG_ERROR, "alloc AFrame error no mem\n");
+        return BSPD_NO_MEMY;
+    }
+
     bc_log(ctx, BSPD_LOG_DEBUG,"pFrame alloc \n");
     ctx->pCoder->pFrameYUV = av_frame_alloc();
 
@@ -644,12 +651,22 @@ int bc_init_coder(BSPDContext *ctx) {
         }
         int64_t och = av_get_default_channel_layout(ch);
         int64_t ich = av_get_default_channel_layout(ctx->pCoder->pACodecCtx->channels);
-        ctx->pCoder->pcmSwrCtx = swr_alloc();
+        //ctx->pCoder->pcmSwrCtx = swr_alloc();
         //unity3d pcm is flt fmt
-        ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(ctx->pCoder->pcmSwrCtx, och,
+        ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(NULL, och,
             AV_SAMPLE_FMT_FLT, sr, ich,
             ctx->pCoder->pACodecCtx->sample_fmt, ctx->pCoder->pACodecCtx->sample_rate,
             0, NULL);
+        ctx->pCoder->audio_tgt.channels = ch;
+        ctx->pCoder->audio_tgt.fmt = AV_SAMPLE_FMT_FLT;
+        ctx->pCoder->audio_tgt.freq = sr;
+        ctx->pCoder->audio_tgt.channel_layout = och;
+
+        ctx->pCoder->audio_src.channels = ctx->pCoder->pACodecCtx->channels;
+        ctx->pCoder->audio_src.fmt = ctx->pCoder->pACodecCtx->sample_fmt;
+        ctx->pCoder->audio_src.freq = ctx->pCoder->pACodecCtx->sample_rate;
+        ctx->pCoder->audio_src.channel_layout = ctx->pCoder->pACodecCtx->channel_layout;
+
        int err = swr_init(ctx->pCoder->pcmSwrCtx);
         bc_log(ctx, BSPD_LOG_DEBUG, "create pcmswrctx done \n");
        if (err != 0)
@@ -790,13 +807,21 @@ int bc_decode_audio(BSPDContext *ctx) {
     }
     int ret = avcodec_send_packet(ctx->pCoder->pACodecCtx, ctx->pCoder->packet);
 
+    if (ret!=0)
+    {
+        printf("avcodec send packet ret:%d\n", ret);
+    }
     if (ret<0)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "send audio packet error code: %d\n", ret);
         return BSPD_AVLIB_ERROR;
     }
 
-    ret = avcodec_receive_frame(ctx->pCoder->pACodecCtx, ctx->pCoder->pFrame);
+    ret = avcodec_receive_frame(ctx->pCoder->pACodecCtx, ctx->pCoder->pAFrame);
+    if (ret!=0)
+    {
+        printf("avcodec receive frame ret:%d\n", ret);
+    }
 
     av_packet_unref(ctx->pCoder->packet);
 
@@ -868,6 +893,35 @@ int bc_sws_pic(BSPDContext *ctx) {
     return BSPD_OP_OK;
 }
 
+
+static AVFrame *alloc_audio_frame(enum AVSampleFormat sample_fmt,
+    uint64_t channel_layout,
+    int sample_rate, int nb_samples)
+{
+    AVFrame *frame = av_frame_alloc();
+    int ret;
+
+    if (!frame) {
+        fprintf(stderr, "Error allocating an audio frame\n");
+        exit(1);
+    }
+
+    frame->format = sample_fmt;
+    frame->channel_layout = channel_layout;
+    frame->sample_rate = sample_rate;
+    frame->nb_samples = nb_samples;
+
+    if (nb_samples) {
+        ret = av_frame_get_buffer(frame, 0);
+        if (ret < 0) {
+            fprintf(stderr, "Error allocating an audio buffer\n");
+            exit(1);
+        }
+    }
+
+    return frame;
+}
+
 int bc_swr_pcm(BSPDContext *ctx) {
     if (BSPDISNULL(ctx))
     {
@@ -876,13 +930,53 @@ int bc_swr_pcm(BSPDContext *ctx) {
 
     if (ctx->pCoder->pcmSwrCtx != NULL)
     {
-        if (ctx->pCoder->pBuf == NULL)
+        int out_count = 0;
+        if (ctx->pCoder->sampleRate > 0 )
         {
-            ctx->pCoder->pBuf = (unsigned char*)malloc(102400);
+             out_count = (int64_t)ctx->pCoder->pAFrame->nb_samples*ctx->pCoder->sampleRate / ctx->pCoder->pAFrame->sample_rate + 256;
         }
-        int ret = swr_convert(ctx->pCoder->pcmSwrCtx, &ctx->pCoder->pBuf,
-            ctx->pCoder->pFrame->nb_samples,
-            (const uint8_t**)ctx->pCoder->pFrame->extended_data, ctx->pCoder->pFrame->nb_samples);
+        else
+        {
+            out_count = ctx->pCoder->pAFrame->nb_samples;
+        }
+
+        if (ctx->pCoder->pAudioBuf == NULL)
+        {
+            ctx->pCoder->pAudioBuf = (uint8_t*)malloc(102400);
+        }
+
+        //int out_size = av_samples_get_buffer_size(NULL, ctx->pCoder->pACodecCtx->channels, out_count, AV_SAMPLE_FMT_FLT, 0);
+       // const uint8_t **out = &ctx->pCoder->pAudioBuf;
+
+       // unsigned int bufsize = out_size + 1024;
+    //    av_fast_malloc(ctx->pCoder->pPcmFrame->data, , out_size);
+
+        AVFrame *af;
+        af = ctx->pCoder->pAFrame;
+        if (af->channels != ctx->pCoder->audio_src.channels ||
+            af->channel_layout != ctx->pCoder->audio_src.channel_layout ||
+            af->format != ctx->pCoder->audio_src.fmt ||
+            af->sample_rate != ctx->pCoder->audio_src.freq)
+        {
+            swr_free(&ctx->pCoder->pcmSwrCtx);
+            ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(NULL, ctx->pCoder->audio_tgt.channel_layout,
+                ctx->pCoder->audio_tgt.fmt, ctx->pCoder->audio_tgt.freq,
+                af->channel_layout, af->format, af->sample_rate, 0, NULL);
+            if (!ctx->pCoder->pcmSwrCtx || swr_init(ctx->pCoder->pcmSwrCtx))
+            {
+                swr_free(&ctx->pCoder->pcmSwrCtx);
+                bc_log(ctx, BSPD_LOG_ERROR, "create sample rate converter error \n");
+                return BSPD_AVLIB_ERROR;
+            }
+            ctx->pCoder->audio_src.channel_layout = af->channel_layout;
+            ctx->pCoder->audio_src.channels = af->channels;
+            ctx->pCoder->audio_src.fmt = af->format;
+            ctx->pCoder->audio_src.freq = af->sample_rate;
+
+        }
+
+        int ret = swr_convert(ctx->pCoder->pcmSwrCtx, &ctx->pCoder->pAudioBuf, out_count,
+           (const uint8_t**)ctx->pCoder->pAFrame->extended_data, ctx->pCoder->pAFrame->nb_samples);
 
         if (ret>0)
         {
@@ -892,8 +986,8 @@ int bc_swr_pcm(BSPDContext *ctx) {
                 flag = 1;
             }
             ctx->pCoder->pSize = av_samples_get_buffer_size(NULL, ctx->pCoder->channles, ret, AV_SAMPLE_FMT_FLT, flag);
-            ctx->timeStamp = ctx->pCoder->pFrame->pkt_pts;
-            ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+            ctx->timeStamp = ctx->pCoder->pAFrame->pts;
+            ctx->vDuration = ctx->pCoder->pAFrame->pkt_duration;
             return BSPD_OP_OK;
         }
         
@@ -987,6 +1081,12 @@ int bc_close(BSPDContext *ctx) {
         av_frame_free(&ctx->pCoder->pFrame);
     }
 
+    if (ctx->pCoder->pAFrame)
+    {
+        av_frame_unref(ctx->pCoder->pAFrame);
+        av_frame_free(&ctx->pCoder->pAFrame);
+    }
+
     if (ctx->pCoder->pFrameYUV)
     {
         av_frame_unref(ctx->pCoder->pFrameYUV);
@@ -1036,6 +1136,10 @@ int bc_close(BSPDContext *ctx) {
         free(ctx->pCoder->pBuf);
     }
 
+    if (ctx->pCoder->pAudioBuf)
+    {
+        free(ctx->pCoder->pAudioBuf);
+    }
 
     return BSPD_OP_OK;
 }

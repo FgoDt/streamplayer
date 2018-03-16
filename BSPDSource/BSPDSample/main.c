@@ -13,6 +13,7 @@ typedef int(*BSPDOpen)(void *ctx, char* input, char *options);
 typedef int(*BSPDGetYUV)(void *ctx, char *ydata, char *udata, char *vdata, long *vpts, long *apts, long *vduration, long *aduration);
 typedef int(*BSPDGetDecWH)(void *ctx, int *w, int *h);
 typedef int(*BSPDGetAudioCfg)(void *ctx, int *sr, int *ch);
+typedef int(*BSPDGetRaw) (void *bspdctx, char *ydata, char *udata, char *vdata, int64_t *pts, int64_t *duration);
 
 
 static const GLfloat vertexVertices[] = {
@@ -102,6 +103,15 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+int getpcmlen(char *udata) {
+    int len = 0;
+    len += (uint8_t)(udata[0]) << 24;
+    len += (uint8_t)(udata[1]) << 16;
+    len += (uint8_t)(udata[2]) << 8;
+    len +=(uint8_t)udata[3];
+    return len;
+}
+
 float i = -1.5f;
 int main(void)
 {
@@ -118,9 +128,12 @@ int main(void)
         BSPDGetYUV getyuvfunc = (BSPDGetYUV)GetProcAddress(hdll, "BSPDGetYUVWithTime");
         BSPDGetDecWH getdecwh = (BSPDGetDecWH)GetProcAddress(hdll, "BSPDGetDecWH");
         BSPDGetAudioCfg getaudiocfg = (BSPDGetAudioCfg)GetProcAddress(hdll, "BSPDGetAudioCfg");
+        BSPDGetRaw getraw = (BSPDGetRaw)GetProcAddress(hdll, "BSPDGetRawDataWithTime");
+
 
         void* ctx = createfunc();
-        int f = openfunc(ctx, (char*)"f:\css.mkv", (char*)"-d -psize 36000 -ha");
+        int f = openfunc(ctx, (char*)"f:\sp.mkv", (char*)"-d -ha");
+        FILE *testpcm = fopen("F:\\test.pcm", "wb");
         int w = 120;
         int h = 180;
 
@@ -220,10 +233,15 @@ int main(void)
     long t;
     while (!glfwWindowShouldClose(window))
     {
-        f = getyuvfunc(ctx, ydata, udata, vdata,&t,&t,&t,&t);
-        if (f!=0)
+      //  f = getyuvfunc(ctx, ydata, udata, vdata,&t,&t,&t,&t);
+        f = getraw(ctx, ydata, udata, vdata, &t, &t);
+        if (f == 2)
         {
-            break;
+            fwrite(ydata, 1, getpcmlen(udata), testpcm);
+        }
+        if (f != 1)
+        {
+            continue;
         }
 
         glActiveTexture(GL_TEXTURE0);
@@ -256,7 +274,7 @@ int main(void)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         glfwSwapBuffers(window);
-        Sleep(20);
+        Sleep(2);
         glfwPollEvents();
     }
 
