@@ -209,4 +209,6 @@ int bc_decode_video_packet(BSPDContext *ctx,BSPDPacketData *p);
 
 int bc_free_packet();
 
+int bc_seek_test(BSPDContext *ctx, int64_t t);
+
 #endif // !__BSPD_CODER_H_

@@ -81,6 +81,12 @@ namespace BSPDTest
         [DllImport("BSPD")]
         private static extern int BSPDGetRawDataWithTime(IntPtr ctx, byte[] ydata, byte[] udata, byte[] ydat, ref long pts, ref long duration);
 
+        [DllImport("BSPD")]
+        private static extern int BSPDGetDecWH(IntPtr ctx, ref int w, ref int h);
+
+        [DllImport("BSPD")]
+        private static extern int BSPDGetAudioCfg(IntPtr ctx, ref int sr, ref int ch);
+
         static void LogCallbackFunc(string log)
         {
             Console.Write(log);
@@ -117,6 +123,24 @@ namespace BSPDTest
             return false;
         }
 
+        public void GetDecWH(ref int w, ref int h)
+        {
+            w = DecW;
+            h = DecH;
+        }
+
+        public bool GetRawData(byte[] ydata, byte[] udata, byte[] vdata)
+        {
+            CheckUpdate();
+            if (preData!=null&&ydata!=null)
+            {
+                Array.Copy(preData.YData, ydata, ydata.Length);
+                Array.Copy(preData.UData, udata, udata.Length);
+                Array.Copy(preData.VData, vdata, vdata.Length);
+            }
+            return false;
+        }
+
         private static long GetTimeStamp()
         {
             TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
@@ -131,6 +155,10 @@ namespace BSPDTest
         long vPaseTime = 0;
         long curtime;
         int idex = -1;
+
+        BSPDMediaData videoData;
+        BSPDMediaData audioData;
+        BSPDTimeControl tc;
         public void CheckUpdate()
         {
             curtime = GetTimeStamp();
@@ -146,11 +174,11 @@ namespace BSPDTest
                 //else
                 //{
                 //    nextData = null;
+                ////}
+                //if (tcontrol.DelayTime>500)
+                //{
+                //    mediaCache.TrySkipFrame(-1);
                 //}
-                if (tcontrol.DelayTime>500)
-                {
-                    mediaCache.TrySkipFrame(-1);
-                }
                 nextData = mediaCache.Pop();
 //                nextData = bSPDCache.Pop(BSPDMediaDataType.Video);
             }
@@ -164,6 +192,11 @@ namespace BSPDTest
                 pretime = curtime;
                 MediaStateChage?.Invoke(BSPDMediaState.open);
                 Update();
+                if (tc == null)
+                {
+                    tc = new BSPDTimeControl();
+                    tc.InitClock(preData, preData);
+                }
                 tcontrol.SetInitTime(preData.vpts);
             }
             else
@@ -175,14 +208,30 @@ namespace BSPDTest
                    // Console.WriteLine((curtime + vPaseTime - RBaseTime));
                     vt = nextData.vpts-VBaseTime;
                     rt = curtime - RBaseTime;
-                    if (vt<rt)
+                    int fl =  tc.CheckUpdate(nextData);
+                    if (fl == 1)
                     {
-                        Console.WriteLine("VT:" + nextData.vpts);
-                         Console.WriteLine("RT:" + rt);
                         preData = nextData;
-                        pretime = curtime;
                         Update();
                     }
+                    if (fl < 0)
+                    {
+                        
+                        nextData = null;
+                        while (fl<-1 && mediaCache.queue.Count>2)
+                        {
+                            mediaCache.Pop();
+                            fl++;
+                        }
+                    }
+                    //if (vt<rt)
+                    //{
+                    //    //Console.WriteLine("VT:" + nextData.vpts);
+                    //    // Console.WriteLine("RT:" + rt);
+                    //    preData = nextData;
+                    //    pretime = curtime;
+                    //    Update();
+                    //}
                 }
             }
         }
@@ -220,7 +269,7 @@ namespace BSPDTest
 
             mBSPDCtx = BSPDCreateCtx();
             GC.SuppressFinalize(mBSPDCtx);
-            BSPDOpen(mBSPDCtx, PATH, "-d -psize 36 -timeout 1000 -ha -ch 2 -sr 44100");
+            BSPDOpen(mBSPDCtx, PATH, "-d -timeout 1000 -ha -ch 2 -sr 44100");
 
             //int op = 123;
             //IntPtr pkt = BSPDCreatePacket(mBSPDCtx, ref op);
@@ -239,6 +288,9 @@ namespace BSPDTest
         }
 
         Thread mThread;
+
+        public int DecW { get; set; }
+        public int DecH { get; set; }
         private void DataThread()
         {
             bool op = true;
@@ -252,6 +304,10 @@ namespace BSPDTest
             ydata = new byte[bSPD.ysize];
             udata = new byte[bSPD.ysize / 4];
             vdata = new byte[bSPD.ysize / 4];
+            int w =0, h =0;
+            BSPDGetDecWH(mBSPDCtx, ref w, ref h);
+            DecW = w;
+            DecH = h;
             long apts = 0, vpts = 0, aduration = 0, vduration = 0;
             MediaStateChage?.Invoke(BSPDMediaState.buffering);
             while (true)
@@ -286,7 +342,8 @@ namespace BSPDTest
                         if(flt == 2)
                         {
                             int num = GetInt32(udata);
-                            file.Write(ydata, 0, num);
+                           // Console.WriteLine("audio pts:" + vpts + " dur:" + vduration);
+                           // file.Write(ydata, 0, num);
                             continue;
                         }
                         else if (flt == 1)
@@ -303,8 +360,12 @@ namespace BSPDTest
                         mediaData.YData = new byte[ydata.Length];
                         mediaData.VData = new byte[vdata.Length];
                         mediaData.UData = new byte[udata.Length];
+                        Array.Copy(ydata, mediaData.YData, ydata.Length);
+                        Array.Copy(udata, mediaData.UData, udata.Length);
+                        Array.Copy(vdata, mediaData.VData, vdata.Length);
                         mediaData.vpts = vpts;
                         mediaData.vdur = vduration;
+                        mediaData.MediaType = BSPDMediaDataType.Video;
                     }
                     //Array.Copy(ydata, StaticCache.mediaQueue[idex].YData, ydata.Length);
                     //Array.Copy(vdata, StaticCache.mediaQueue[idex].VData, vdata.Length);

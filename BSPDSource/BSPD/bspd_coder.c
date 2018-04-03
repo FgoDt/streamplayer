@@ -377,7 +377,7 @@ int bc_set_default_options(BSPDContext *ctx) {
     }
     ctx->pCoder->LOGLEVEL = AV_LOG_ERROR;
     ctx->pCoder->useHW = 0;
-    ctx->pCoder->pSize = 1024000;
+    ctx->pCoder->pSize = -1;
     ctx->pCoder->timeout = 15000;
     return BSPD_OP_OK;
 }
@@ -414,10 +414,10 @@ int bc_init_coder(BSPDContext *ctx) {
     ctx->pCoder->pFormatCtx->interrupt_callback.callback = decodec_interrupt_cb;
     ctx->pCoder->pFormatCtx->interrupt_callback.opaque = ctx;
 
-
-    //// fix me use options
-    ctx->pCoder->pFormatCtx->probesize = ctx->pCoder->pSize;
-    /////
+    if (ctx->pCoder->pSize!=-1)
+    {
+        ctx->pCoder->pFormatCtx->probesize = ctx->pCoder->pSize;
+    }
 
 
     //ctx->hb = 0;
@@ -712,24 +712,19 @@ int bc_get_yuv(BSPDContext *ctx) {
     while (1)
     {
         ctx->hb = 0;
-       // bc_log(ctx,BSPD_LOG_DEBUG,"in readframe");
         if (av_read_frame(ctx->pCoder->pFormatCtx, ctx->pCoder->packet) < 0)
         {
             bc_log(ctx, BSPD_LOG_ERROR, "av read frame error \n");
             retval = BSPD_ERRO_UNDEFINE;
             break;
         }
-      //  bc_log(ctx,BSPD_LOG_DEBUG,"in stream index");
         if (ctx->pCoder->packet->stream_index != ctx->pCoder->fVIndex)
         {
             av_packet_unref(ctx->pCoder->packet);
             continue;
         }
 
-       // bc_log(ctx,BSPD_LOG_DEBUG,"in decodec video2");
-       // ret = avcodec_decode_video2(ctx->pCoder->pCodecCtx, ctx->pCoder->pFrame, &got, ctx->pCoder->packet);
           ret = avcodec_send_packet(ctx->pCoder->pCodecCtx, ctx->pCoder->packet);
-       // bc_log(ctx,BSPD_LOG_DEBUG,"out decode video2 and got:%d",got);
         if (ret < 0)
         {
             bc_log(ctx, BSPD_LOG_ERROR, "decode video2 error ret is %d\n", ret);
@@ -746,7 +741,6 @@ int bc_get_yuv(BSPDContext *ctx) {
             continue;
         }
        
-            //bc_log(ctx,BSPD_LOG_ERROR,"pix_fmt %d, format %d",ctx->pCoder->pCodecCtx->pix_fmt,ctx->pCoder->pFrame->format);
             if(ctx->pCoder->pCodecCtx->pix_fmt!= ctx->pCoder->pFrame->format)
             {
                 bc_log(ctx,BSPD_LOG_ERROR,"pix_fmt %d, format %d",ctx->pCoder->pCodecCtx->pix_fmt,ctx->pCoder->pFrame->format);
@@ -778,17 +772,13 @@ int bc_get_yuv(BSPDContext *ctx) {
             }
             if (!strcmp(ctx->pCoder->pFormatCtx->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2"))
             {
-                ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->packet->pts;
+                ctx->timeStamp =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->time_base)*ctx->pCoder->pFrame->pts )* 1000;
             }
             else
             {
                 ctx->timeStamp = ctx->pCoder->pFrame->pts;
             }
-            //ctx->vDuration = av_q2d((AVRational) { ctx->pCoder->pFrame->nb_samples, ctx->pCoder->pFrame->sample_rate });
             ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
-           // fd_stream(ctx->pCoder->fdSCtx,ctx->pCoder->pFrameYUV->data[0],ctx->ysize);
-           // fd_stream(ctx->pCoder->fdSCtx,ctx->pCoder->pFrameYUV->data[1],ctx->ysize/4);
-           // fd_stream(ctx->pCoder->fdSCtx,ctx->pCoder->pFrameYUV->data[2],ctx->ysize/4);
             av_packet_unref(ctx->pCoder->packet);
             return BSPD_OP_OK;
 
@@ -881,15 +871,9 @@ int bc_sws_pic(BSPDContext *ctx) {
             ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
         ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
     }
-    if (!strcmp(ctx->pCoder->pFormatCtx->iformat->name, "mov,mp4,m4a,3gp,3g2,mj2"))
-    {
-        ctx->timeStamp = av_q2d(ctx->pCoder->pCodecCtx->time_base)*ctx->pCoder->packet->pts;
-    }
-    else
-    {
-        ctx->timeStamp = ctx->pCoder->pFrame->pts;
-    }
+        ctx->timeStamp =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->time_base)*ctx->pCoder->pFrame->pts )* 1000;
     ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+        ctx->vDuration =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->time_base)*ctx->pCoder->pFrame->pkt_duration)* 1000;
     return BSPD_OP_OK;
 }
 
@@ -945,12 +929,6 @@ int bc_swr_pcm(BSPDContext *ctx) {
             ctx->pCoder->pAudioBuf = (uint8_t*)malloc(102400);
         }
 
-        //int out_size = av_samples_get_buffer_size(NULL, ctx->pCoder->pACodecCtx->channels, out_count, AV_SAMPLE_FMT_FLT, 0);
-       // const uint8_t **out = &ctx->pCoder->pAudioBuf;
-
-       // unsigned int bufsize = out_size + 1024;
-    //    av_fast_malloc(ctx->pCoder->pPcmFrame->data, , out_size);
-
         AVFrame *af;
         af = ctx->pCoder->pAFrame;
         if (af->channels != ctx->pCoder->audio_src.channels ||
@@ -986,7 +964,7 @@ int bc_swr_pcm(BSPDContext *ctx) {
                 flag = 1;
             }
             ctx->pCoder->pSize = av_samples_get_buffer_size(NULL, ctx->pCoder->channles, ret, AV_SAMPLE_FMT_FLT, flag);
-            ctx->timeStamp = ctx->pCoder->pAFrame->pts;
+            ctx->timeStamp =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->time_base)*ctx->pCoder->pAFrame->pts )* 1000;
             ctx->vDuration = ctx->pCoder->pAFrame->pkt_duration;
             return BSPD_OP_OK;
         }
@@ -1265,6 +1243,10 @@ int bc_decode_audio_packet(BSPDContext *ctx, BSPDPacketData *p) {
 }
 int bc_decode_video_packet(BSPDContext *ctx, BSPDPacketData *p) {
     return BSPD_AVLIB_ERROR;
+}
+
+int bc_seek_test(BSPDContext *ctx,int64_t t) {
+   return av_seek_frame(ctx->pCoder->pFormatCtx, -1, t, AVSEEK_FLAG_BACKWARD);
 }
 
 int bc_test() {

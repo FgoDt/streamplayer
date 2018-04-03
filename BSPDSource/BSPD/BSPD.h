@@ -194,5 +194,17 @@ extern "C"
 #endif // __cplusplus
 _DLLEXPORT int BSPDGetAudioCfg(BSPDContext *bspdctx, int *sr, int *ch);
 
+#ifdef __cplusplus
+extern "C"
+#endif // __cplusplus
+_DLLEXPORT int BSPDGetAudioCfgPlus(BSPDContext *bspdctx, int *sr, int *ch, int *nb_sample, int *bytespersec);
+
+
+#ifdef __cplusplus
+extern "C"
+#endif // __cplusplus
+//int BSPDSeek(BSPDContext *bspdctx, int64_t t);
+_DLLEXPORT int BSPDSeek(BSPDContext *bspdctx, int64_t t);
+
 
 #endif // ! __BSPD_H__

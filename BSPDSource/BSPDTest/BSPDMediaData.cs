@@ -31,5 +31,7 @@ namespace BSPDTest
 
         public BSPDMediaDataType MediaType { get; set; }
 
+        public bool NeedUpdate { get; set; }
+
     }
 }

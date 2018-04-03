@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="audiotest.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="glad.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -86,8 +89,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\github\streamplayer\ThirdPartyLibs;E:\github\streamplayer\ThirdPartyLibs\GLFW\include;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\github\streamplayer\ThirdPartyLibs\GLFW\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\github\streamplayer\ThirdPartyLibs\SDL2-2.0.7\include;E:\github\streamplayer\ThirdPartyLibs;E:\github\streamplayer\ThirdPartyLibs\GLFW\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\github\streamplayer\ThirdPartyLibs\SDL2-2.0.7\lib\x64;E:\github\streamplayer\ThirdPartyLibs\GLFW\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>

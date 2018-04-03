@@ -269,6 +269,17 @@ _DLLEXPORT int BSPDGetDecWH(BSPDContext * bspdctx, int * w, int * h)
         return BSPD_USE_NULL_ERROR;
     }
 
+    if (bspdctx->pCoder == NULL)
+    {
+        bc_log(bspdctx, BSPD_LOG_ERROR, "pcodec is null \n");
+        return BSPD_USE_NULL_ERROR;
+    }
+    if (bspdctx->pCoder->pCodecCtx == NULL)
+    {
+        bc_log(bspdctx, BSPD_LOG_ERROR, "pcodecCtx is null \n");
+        return BSPD_USE_NULL_ERROR;
+    }
+
     *w = bspdctx->pCoder->pCodecCtx->width;
     *h = bspdctx->pCoder->pCodecCtx->height;
 
@@ -282,10 +293,60 @@ _DLLEXPORT int BSPDGetAudioCfg(BSPDContext * bspdctx, int * sr, int * ch)
         return BSPD_USE_NULL_ERROR;
     }
 
+    if (bspdctx->pCoder == NULL)
+    {
+        bc_log(bspdctx, BSPD_LOG_ERROR, "pcodec is null \n");
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (bspdctx->pCoder->pACodecCtx == NULL)
+    {
+        bc_log(bspdctx, BSPD_LOG_ERROR, "pAcodecCtx is null \n");
+        return BSPD_USE_NULL_ERROR;
+    }
+
     *sr = bspdctx->pCoder->pACodecCtx->sample_rate;
     *ch = bspdctx->pCoder->pACodecCtx->channels;
 
     return BSPD_OP_OK;
+}
+
+_DLLEXPORT int BSPDGetAudioCfgPlus(BSPDContext * bspdctx, int * sr, int * ch, int *nb_sample, int *bytespersec)
+{
+    if (BSPDISNULL(bspdctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (bspdctx->pCoder == NULL)
+    {
+        bc_log(bspdctx, BSPD_LOG_ERROR, "pcodec is null \n");
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (bspdctx->pCoder->pACodecCtx == NULL)
+    {
+        bc_log(bspdctx, BSPD_LOG_ERROR, "pAcodecCtx is null \n");
+        return BSPD_USE_NULL_ERROR;
+    }
+
+
+    *sr = bspdctx->pCoder->sampleRate > 0? bspdctx->pCoder->sampleRate: bspdctx->pCoder->pACodecCtx->sample_rate;
+    *ch = bspdctx->pCoder->channles > 0 ? bspdctx->pCoder->channles : bspdctx->pCoder->pACodecCtx->channels;
+    *nb_sample = FFMAX(512, 2 << av_log2(*sr / 30));
+
+    *bytespersec = av_samples_get_buffer_size(NULL, *ch, *sr, AV_SAMPLE_FMT_FLT, 1);
+
+    return BSPD_OP_OK;
+}
+
+_DLLEXPORT int BSPDSeek(BSPDContext *bspdctx, int64_t t) {
+    if (BSPDISNULL(bspdctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+   return bc_seek_test(bspdctx, t);
 }
 
 #if __ANDROID_NDK__
