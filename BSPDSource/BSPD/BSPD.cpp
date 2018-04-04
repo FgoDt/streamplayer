@@ -340,6 +340,29 @@ _DLLEXPORT int BSPDGetAudioCfgPlus(BSPDContext * bspdctx, int * sr, int * ch, in
     return BSPD_OP_OK;
 }
 
+_DLLEXPORT int BSPDGetMediaInfo(BSPDContext * bspdctx, unsigned char * info)
+{
+    if (BSPDISNULL(bspdctx))
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+    if (bspdctx->pCoder==NULL)
+    {
+        return BSPD_USE_NULL_ERROR;
+    }
+
+    if (bspdctx->pCoder->fVIndex!=-1)
+    {
+        *info |= 0x1;
+    }
+    if (bspdctx->pCoder->fAIndex !=-1)
+    {
+        *info |= 0x2;
+    }
+    return BSPD_OP_OK;
+    
+}
+
 _DLLEXPORT int BSPDSeek(BSPDContext *bspdctx, int64_t t) {
     if (BSPDISNULL(bspdctx))
     {

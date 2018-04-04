@@ -243,6 +243,10 @@ void setval(BSPDContext *ctx) {
         bc_log(ctx, BSPD_AVLIB_ERROR, "set val error\n");
         return;
     }
+    if (ctx->pCoder->pCodecCtx == NULL)
+    {
+        return;
+    }
 
     ctx->width = ctx->pCoder->pCodecCtx->width;
     ctx->height = ctx->pCoder->pCodecCtx->height;
@@ -394,13 +398,13 @@ int bc_init_coder(BSPDContext *ctx) {
     }
     ctx->pCoder->initDone = -1;
 
-   // ctx->pCoder->fdSCtx = NULL;
-    /////
-   // ctx->pCoder->fdcCtx = create_fd_ctx();
-   // fd_connect("192.168.3.69",1025,ctx->pCoder->fdcCtx);
-   // ////
-   // ctx->pCoder->fdSCtx = create_fd_ctx();
-   // fd_connect("192.168.3.69",1027,ctx->pCoder->fdSCtx);
+    // ctx->pCoder->fdSCtx = NULL;
+     /////
+    // ctx->pCoder->fdcCtx = create_fd_ctx();
+    // fd_connect("192.168.3.69",1025,ctx->pCoder->fdcCtx);
+    // ////
+    // ctx->pCoder->fdSCtx = create_fd_ctx();
+    // fd_connect("192.168.3.69",1027,ctx->pCoder->fdSCtx);
 
 
     av_register_all();
@@ -414,14 +418,14 @@ int bc_init_coder(BSPDContext *ctx) {
     ctx->pCoder->pFormatCtx->interrupt_callback.callback = decodec_interrupt_cb;
     ctx->pCoder->pFormatCtx->interrupt_callback.opaque = ctx;
 
-    if (ctx->pCoder->pSize!=-1)
+    if (ctx->pCoder->pSize != -1)
     {
         ctx->pCoder->pFormatCtx->probesize = ctx->pCoder->pSize;
     }
 
 
     //ctx->hb = 0;
-    if (avformat_open_input(&ctx->pCoder->pFormatCtx,ctx->inputPath,NULL,NULL)!=0)
+    if (avformat_open_input(&ctx->pCoder->pFormatCtx, ctx->inputPath, NULL, NULL) != 0)
     {
         if (ctx->pCoder->istimeout == 0x1)
         {
@@ -437,7 +441,7 @@ int bc_init_coder(BSPDContext *ctx) {
     }
     ctx->hb = -2;
 
-    if (avformat_find_stream_info(ctx->pCoder->pFormatCtx,NULL)<0)
+    if (avformat_find_stream_info(ctx->pCoder->pFormatCtx, NULL) < 0)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "avformat find stream info error\n");
         return BSPD_AVLIB_ERROR;
@@ -446,7 +450,7 @@ int bc_init_coder(BSPDContext *ctx) {
     ctx->pCoder->fVIndex = -1;
     ctx->pCoder->fAIndex = -1;
 
-    for (int i = 0; i < (int)ctx->pCoder->pFormatCtx->nb_streams&&i<MAX_MEDIATYPE_INDEX; i++)
+    for (int i = 0; i < (int)ctx->pCoder->pFormatCtx->nb_streams&&i < MAX_MEDIATYPE_INDEX; i++)
     {
         if (ctx->pCoder->pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
         {
@@ -464,7 +468,6 @@ int bc_init_coder(BSPDContext *ctx) {
     if (ctx->pCoder->fVIndex == -1)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "cant find video stream\n");
-        return BSPD_AVLIB_ERROR;
     }
 
     if (ctx->pCoder->fAIndex == -1)
@@ -474,11 +477,11 @@ int bc_init_coder(BSPDContext *ctx) {
     }
 
     //init audio codec
-    if (ctx->pCoder->hasAudio)
+    if (ctx->pCoder->hasAudio && ctx->pCoder->fAIndex != -1)
     {
         ctx->pCoder->pACodecCtx = avcodec_alloc_context3(NULL);
         int ret = avcodec_parameters_to_context(ctx->pCoder->pACodecCtx, ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->codecpar);
-        if (ret<0)
+        if (ret < 0)
         {
             bc_log(ctx, BSPD_LOG_ERROR, "audio codec ctx parse error\n");
             return BSPD_AVLIB_ERROR;
@@ -492,70 +495,73 @@ int bc_init_coder(BSPDContext *ctx) {
     }
 
 
-    //init vido codec
-    ctx->pCoder->pCodecCtx = avcodec_alloc_context3(NULL);
-    //ctx->pCoder->pCodecCtx = ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codec;
-    int ret = avcodec_parameters_to_context(ctx->pCoder->pCodecCtx, ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codecpar);
-    if (ret<0)
+    if (ctx->pCoder->fVIndex != -1)
     {
-        bc_log(ctx, BSPD_LOG_ERROR, "codec ctx parse error\n");
-        return BSPD_AVLIB_ERROR;
-    }
-    ctx->pCoder->pCodec = avcodec_find_decoder(ctx->pCoder->pCodecCtx->codec_id);
-    if(ctx->pCoder->pCodec == NULL){
-        bc_log(ctx,BSPD_LOG_ERROR,"no codec found!");
-        return BSPD_NO_CODEC_FOUND;
-    }
-    bc_log(ctx, BSPD_LOG_DEBUG, "open codec codec_id: %d \n",ctx->pCoder->pCodecCtx->codec_id);
-#if __ANDROID_NDK__
-    if(av_set_java_vm_flags == NULL) {
-        AVCodec *MCCodec = NULL;
-        MCCodec = avcodec_find_decoder_by_name("h264_mediacodec");
-        if (MCCodec!= NULL) {
-           // bc_log(ctx,BSPD_LOG_ERROR,"HAS MCCODEC");
-            ctx->pCoder->pCodec = MCCodec;
-            ctx->pCoder->pCodecCtx->codec_id = ctx->pCoder->pCodec->id;
-            bc_log(ctx, BSPD_LOG_DEBUG, "open android  mediacodec \n");
+        //init vido codec
+        ctx->pCoder->pCodecCtx = avcodec_alloc_context3(NULL);
+        //ctx->pCoder->pCodecCtx = ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codec;
+        int ret = avcodec_parameters_to_context(ctx->pCoder->pCodecCtx, ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->codecpar);
+        if (ret < 0)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "codec ctx parse error\n");
+            return BSPD_AVLIB_ERROR;
         }
+        ctx->pCoder->pCodec = avcodec_find_decoder(ctx->pCoder->pCodecCtx->codec_id);
+        if (ctx->pCoder->pCodec == NULL) {
+            bc_log(ctx, BSPD_LOG_ERROR, "no codec found!");
+            return BSPD_NO_CODEC_FOUND;
+        }
+        bc_log(ctx, BSPD_LOG_DEBUG, "open codec codec_id: %d \n", ctx->pCoder->pCodecCtx->codec_id);
+#if __ANDROID_NDK__
+        if (av_set_java_vm_flags == NULL) {
+            AVCodec *MCCodec = NULL;
+            MCCodec = avcodec_find_decoder_by_name("h264_mediacodec");
+            if (MCCodec != NULL) {
+                // bc_log(ctx,BSPD_LOG_ERROR,"HAS MCCODEC");
+                ctx->pCoder->pCodec = MCCodec;
+                ctx->pCoder->pCodecCtx->codec_id = ctx->pCoder->pCodec->id;
+                bc_log(ctx, BSPD_LOG_DEBUG, "open android  mediacodec \n");
+            }
     }
 #endif
-    enum AVHWDeviceType hwType ;
+        enum AVHWDeviceType hwType;
 
-    hwType = AV_HWDEVICE_TYPE_NONE;
-    if (ctx->pCoder->useHW)
-    {
+        hwType = AV_HWDEVICE_TYPE_NONE;
+        if (ctx->pCoder->useHW)
+        {
 #if _WIN32||_WIN64
-        hwType = av_hwdevice_find_type_by_name("dxva2");
+            hwType = av_hwdevice_find_type_by_name("dxva2");
 #endif
 #if TARGET_OS_IPHONE
-        hwType = av_hwdevice_find_type_by_name("videotoolbox");
+            hwType = av_hwdevice_find_type_by_name("videotoolbox");
 #endif
-        if (hwType != AV_HWDEVICE_TYPE_NONE)
-        {
-            ctx->pCoder->hwPixFmt = find_fmt_by_hw_type(hwType);
+            if (hwType != AV_HWDEVICE_TYPE_NONE)
+            {
+                ctx->pCoder->hwPixFmt = find_fmt_by_hw_type(hwType);
+            }
+            if (ctx->pCoder->hwPixFmt != -1)
+            {
+                ctx->pCoder->pCodecCtx->pix_fmt = ctx->pCoder->hwPixFmt;
+                ctx->pCoder->pCodecCtx->get_format = get_hw_format;
+                ctx->pCoder->hwInitDone = !hw_decoder_init(ctx, hwType);
+                bc_log(ctx, BSPD_LOG_DEBUG, "hw decoder init done \n");
+            }
         }
-        if (ctx->pCoder->hwPixFmt != -1)
+
+        if (ctx->pCoder->pCodec == NULL)
         {
-            ctx->pCoder->pCodecCtx->pix_fmt = ctx->pCoder->hwPixFmt;
-            ctx->pCoder->pCodecCtx->get_format = get_hw_format;
-            ctx->pCoder->hwInitDone = !hw_decoder_init(ctx, hwType);
-            bc_log(ctx, BSPD_LOG_DEBUG, "hw decoder init done \n");
+            bc_log(ctx, BSPD_LOG_ERROR, "no codec found\n");
+            return BSPD_AVLIB_ERROR;
         }
-    }
 
-    if (ctx->pCoder->pCodec == NULL)
-    {
-        bc_log(ctx, BSPD_LOG_ERROR, "no codec found\n");
-        return BSPD_AVLIB_ERROR;
-    }
+        if (avcodec_open2(ctx->pCoder->pCodecCtx, ctx->pCoder->pCodec, NULL) < 0)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "avcodec open error\n");
+            return BSPD_AVLIB_ERROR;
+        }
 
-    if (avcodec_open2(ctx->pCoder->pCodecCtx,ctx->pCoder->pCodec,NULL)<0)
-    {
-        bc_log(ctx, BSPD_LOG_ERROR, "avcodec open error\n");
-        return BSPD_AVLIB_ERROR;
-    }
-
-    bc_log(ctx, BSPD_LOG_DEBUG, "video codec open2 done \n");
+        bc_log(ctx, BSPD_LOG_DEBUG, "video codec open2 done \n");
+}
 
     if (ctx->pCoder->hasAudio == 1 && ctx->pCoder->pACodecCtx !=NULL
         && avcodec_open2(ctx->pCoder->pACodecCtx,ctx->pCoder->pACodec,NULL)<0)
@@ -589,50 +595,53 @@ int bc_init_coder(BSPDContext *ctx) {
     }
     bc_log(ctx, BSPD_LOG_DEBUG,"pFrameYUV alloc \n");
 
-    ctx->pCoder->pBuf = (unsigned char *)malloc(av_image_get_buffer_size(
+    if (ctx->pCoder->fVIndex != -1)
+    {
+        ctx->pCoder->pBuf = (unsigned char *)malloc(av_image_get_buffer_size(
             AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height, 1));
 
-    if (ctx->pCoder->pBuf == NULL && ctx->pCoder->pCodecCtx->width != 0 &&ctx->pCoder->pCodecCtx->height != 0)
-    {
-        bc_log(ctx, BSPD_LOG_DEBUG,"pcoder->pbuf width:%d height:%d \n",ctx->pCoder->pCodecCtx->width,
-            ctx->pCoder->pCodecCtx->height);
-        bc_log(ctx, BSPD_LOG_ERROR, "malloc pbuf error \n");
-        return BSPD_NO_MEMY;
-    }
+        if (ctx->pCoder->pBuf == NULL && ctx->pCoder->pCodecCtx->width != 0 && ctx->pCoder->pCodecCtx->height != 0)
+        {
+            bc_log(ctx, BSPD_LOG_DEBUG, "pcoder->pbuf width:%d height:%d \n", ctx->pCoder->pCodecCtx->width,
+                ctx->pCoder->pCodecCtx->height);
+            bc_log(ctx, BSPD_LOG_ERROR, "malloc pbuf error \n");
+            return BSPD_NO_MEMY;
+        }
 
-    bc_log(ctx, BSPD_LOG_DEBUG,"pcoder->pbuf malloc done \n");
+        bc_log(ctx, BSPD_LOG_DEBUG, "pcoder->pbuf malloc done \n");
 
-    av_image_fill_arrays(ctx->pCoder->pFrameYUV->data,
-                         ctx->pCoder->pFrameYUV->linesize, ctx->pCoder->pBuf,
-                         AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width,
-                         ctx->pCoder->pCodecCtx->height, 1);
+        av_image_fill_arrays(ctx->pCoder->pFrameYUV->data,
+            ctx->pCoder->pFrameYUV->linesize, ctx->pCoder->pBuf,
+            AV_PIX_FMT_YUV420P, ctx->pCoder->pCodecCtx->width,
+            ctx->pCoder->pCodecCtx->height, 1);
 
-    if (ctx->pCoder->pCodecCtx->width*ctx->pCoder->pCodecCtx->height <= 32)
-    {
-        bc_log(ctx, BSPD_LOG_ERROR, "open media err w*h less 32 maybe psize too small \n");
-        return BSPD_AVLIB_ERROR;
-    }
-    if (ctx->pCoder->useHW&&ctx->pCoder->hwInitDone)
-    {
-        //硬编码获得的纹理是nv12格式
-        ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
-            ctx->pCoder->pCodecCtx->height, AV_PIX_FMT_NV12,
-            ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
-            AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
-    }
-    else
-    {
-        ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
-            ctx->pCoder->pCodecCtx->height, ctx->pCoder->pCodecCtx->pix_fmt,
-            ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
-            AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
-    }
+        if (ctx->pCoder->pCodecCtx->width*ctx->pCoder->pCodecCtx->height <= 32)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "open media err w*h less 32 maybe psize too small \n");
+            return BSPD_AVLIB_ERROR;
+        }
+        if (ctx->pCoder->useHW&&ctx->pCoder->hwInitDone)
+        {
+            //硬编码获得的纹理是nv12格式
+            ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
+                ctx->pCoder->pCodecCtx->height, AV_PIX_FMT_NV12,
+                ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
+                AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
+        }
+        else
+        {
+            ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
+                ctx->pCoder->pCodecCtx->height, ctx->pCoder->pCodecCtx->pix_fmt,
+                ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
+                AV_PIX_FMT_YUV420P, SWS_POINT, NULL, NULL, NULL);
+        }
 
-    bc_log(ctx, BSPD_LOG_DEBUG,"imgswsctx malloc done \n");
-    if (ctx->pCoder->imgSwsCtx == NULL)
-    {
-        bc_log(ctx, BSPD_LOG_ERROR, "create imgswsctx error \n");
-        return BSPD_AVLIB_ERROR;
+        bc_log(ctx, BSPD_LOG_DEBUG, "imgswsctx malloc done \n");
+        if (ctx->pCoder->imgSwsCtx == NULL)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "create imgswsctx error \n");
+            return BSPD_AVLIB_ERROR;
+        }
     }
 
     if (ctx->pCoder->hasAudio == 1)
@@ -981,8 +990,6 @@ int bc_get_raw(BSPDContext * ctx)
     }
 
     if (ctx->pCoder->pFormatCtx == NULL ||
-        ctx->pCoder->pCodec == NULL ||
-        ctx->pCoder->pCodecCtx == NULL ||
         ctx->pCoder->packet == NULL)
     {
         bc_log(ctx, BSPD_LOG_ERROR, "formatctx pcodec codecctx packet maybe null\n");

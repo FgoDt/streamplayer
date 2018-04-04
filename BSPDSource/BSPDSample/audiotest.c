@@ -157,6 +157,7 @@ typedef int(*BSPDGetAudioCfg)(void *ctx, int *sr, int *ch);
 typedef int(*BSPDGetAudioCfgp)(void *ctx, int *sr, int *ch,int *nb_sample, int *bytespersec);
 typedef int(*BSPDGetRaw) (void *bspdctx, char *ydata, char *udata, char *vdata, int64_t *pts, int64_t *duration);
 typedef int(*BSPDSeek)(void *ctx, int64_t t);
+typedef int(*BSPDGetMediaInfo)(void *ctx, unsigned char *t);
 
 #endif
 
@@ -367,18 +368,24 @@ void audio_main() {
     BSPDGetAudioCfgp getaudiocfgp = (BSPDGetAudioCfgp)GetProcAddress(hdll, "BSPDGetAudioCfgPlus");
     BSPDGetRaw getraw = (BSPDGetRaw)GetProcAddress(hdll, "BSPDGetRawDataWithTime");
     BSPDSeek bseek = (BSPDSeek)GetProcAddress(hdll, "BSPDSeek");
+    BSPDGetMediaInfo bgetinfo = (BSPDGetMediaInfo)GetProcAddress(hdll, "BSPDGetMediaInfo");
 
 
     void *ctx = createfunc();
 
     //sdl normal use 2 channels
    // char *input = "http://182.150.11.188/live-tx-hdl.huomaotv.cn/live/6fvPQT.flv";
-    char *input = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
-    openfunc(ctx, input, "-d -ch 2 -sr 48000");
+    char *input = "f:/a.flac";
+    openfunc(ctx, input, "-d  -ha -ch 2 ");
+
+    byte test = 0;
+    bgetinfo(ctx, &test);
 
     int h, w;
     getdecwh(ctx, &w, &h);
 
+    h = h <= 0 ? 600 : h;
+    w = w <= 0 ? 800 : w;
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     window = SDL_CreateWindow("BSPD_AUDIO_TEST", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w / 2, h / 2, SDL_WINDOW_OPENGL);
 

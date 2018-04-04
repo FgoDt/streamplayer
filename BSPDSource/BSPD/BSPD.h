@@ -199,6 +199,11 @@ extern "C"
 #endif // __cplusplus
 _DLLEXPORT int BSPDGetAudioCfgPlus(BSPDContext *bspdctx, int *sr, int *ch, int *nb_sample, int *bytespersec);
 
+#ifdef __cplusplus
+extern "C"
+#endif // __cplusplus
+_DLLEXPORT int BSPDGetMediaInfo(BSPDContext *bspdctx, unsigned char *info);
+
 
 #ifdef __cplusplus
 extern "C"
