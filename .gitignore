@@ -3,6 +3,7 @@
 *.tlog
 *.cache
 *.def
+
 BSPDSource/BSPDTest/obj/
 BSPDSource/BSPDTest/bin/
 BSPDSource/BSPDTest/Debug/
@@ -14,6 +15,20 @@ BSPDSource/.vs/
 ThirdPartyLibs/
 
 BSPDSource/BSPD/build/
+
+Android/BSPD/.idea/
+Android/BSPD/*.iml
+Android/BSPD/*.log
+Android/BSPD/proguard/
+Android/BSPD/local.properties
+Android/BSPD/.gradle/
+Android/BSPD/build/
+Android/BSPD/bin/
+Android/BSPD/gen/
+Android/BSPD/*.class
+Android/BSPD/*.dex
+Android/BSPD/*.apk
+*.jar
 
 # Prerequisites
 *.d

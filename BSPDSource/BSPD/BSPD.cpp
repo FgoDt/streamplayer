@@ -2,10 +2,13 @@
 
 #include "BSPD.h"
 
-#if _WIN32||_WIN64
+#ifdef _WIN32||_WIN64
 #include <Windows.h>
 #endif
 
+#ifdef  __ANDROID_NDK__
+#include <jni.h>
+#endif
 
 
 
@@ -380,5 +383,16 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved){
         av_set_java_vm_flags = BSPD_CLOSE_MARK;
     }
     return JNI_VERSION_1_4;
+}
+
+extern "C"
+JNIEXPORT jstring
+
+JNICALL
+Java_com_rt_1zl_bspd_MainActivity_testBuildLib(
+    JNIEnv *env,
+    jobject /* this */) {
+   
+    return env->NewStringUTF("lib is ok");
 }
 #endif

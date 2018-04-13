@@ -3,6 +3,7 @@
 
 #if _WIN32|_WIN64
 #define _CRT_SECURE_NO_WARNINGS 1
+#include <Windows.h>
 #endif
 
 #include <libavcodec/avcodec.h>
@@ -62,6 +63,14 @@ typedef struct AudioParams {
     int bytes_per_sec;
 }AudioParams;
 
+typedef struct BSPECoder {
+    int flags;
+    AVCodec *pAEncodec;
+    AVCodecContext *pAEncodecCtx;
+    AVCodec *pVEncodec;
+    AVCodecContext *pVEncodecCtx;
+}BSPECoder;
+
 
 typedef	struct {
     AVFormatContext *pFormatCtx;
@@ -100,6 +109,7 @@ typedef	struct {
     int             hasAudio;
     int             channles;
     int             sampleRate;
+    enum AVSampleFormat  samplefmt;
     AudioParams     audio_tgt;
     AudioParams     audio_src;
 //    FDCCtx          *fdcCtx;

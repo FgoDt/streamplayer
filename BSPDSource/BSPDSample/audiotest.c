@@ -375,8 +375,9 @@ void audio_main() {
 
     //sdl normal use 2 channels
    // char *input = "http://182.150.11.188/live-tx-hdl.huomaotv.cn/live/6fvPQT.flv";
-    char *input = "f:/a.flac";
-    openfunc(ctx, input, "-d  -ha -ch 2 ");
+    char *input = "http://live-dl-hdl.huomaotv.cn/hmtv/5fILSX?t=1523440252&r=470080342435&stream=5fILSX&rid=oubvc2y3v&token=61ae3eb6f82c5e30bf7026f20bc64d37";
+//    char *input = "f:/sp.mkv";
+    openfunc(ctx, input, "-d -ha   ");
 
     byte test = 0;
     bgetinfo(ctx, &test);
@@ -469,7 +470,9 @@ void audio_main() {
         //video 
         if (flag == 1)
         {
+                printf("vpts:%d\n", pts);
             //updateyuv(tex,render, ydata, udata, vdata,&rect);
+            continue;
 
         rey:
             bdata *data = wpeek_bqueue(vqueue);
@@ -484,6 +487,7 @@ void audio_main() {
                 {
                     initmediaclock(&vclock, data->pts);
                 }
+                printf("vpts:%d\n", pts);
                 push_bqueue(vqueue);
             }
             else
@@ -494,6 +498,9 @@ void audio_main() {
         }
         //audio 
         else if (flag == 2) {
+
+                printf("Apts:%d\n", pts);
+            continue;
 
         reya:
             bdata * data = wpeek_bqueue(aqueue);
@@ -507,6 +514,7 @@ void audio_main() {
                 {
                     initmediaclock(&aclock, data->pts);
                 }
+                printf("Apts:%d\n", pts);
                 push_bqueue(aqueue);
             }
             else

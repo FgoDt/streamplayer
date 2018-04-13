@@ -358,6 +358,38 @@ int bc_parse_options(BSPDContext *ctx)
                j++;
                continue;
            }
+           else if (0 == strcmp(arg, "-af"))
+           {
+               j++;
+               char *afstr = argv[j];
+               if (strcmp(afstr,"u8") == 0)
+               {
+                   ctx->pCoder->samplefmt = AV_SAMPLE_FMT_U8;
+               }
+               else if(strcmp(afstr,"s16") == 0)
+               {
+                   ctx->pCoder->samplefmt = AV_SAMPLE_FMT_S16;
+               }
+               else if(strcmp(afstr,"s32")==0)
+               {
+                   ctx->pCoder->samplefmt = AV_SAMPLE_FMT_S32;
+               }
+               else if (strcmp(afstr, "flt") == 0)
+               {
+                   ctx->pCoder->samplefmt = AV_SAMPLE_FMT_FLT;
+               }
+               else if(strcmp(afstr,"dbl") == 0)
+               {
+                   ctx->pCoder->samplefmt = AV_SAMPLE_FMT_DBL;
+               }
+               else
+               {
+                   //default is flt;
+                   ctx->pCoder->samplefmt = AV_SAMPLE_FMT_FLT;
+               }
+               j++;
+               continue;
+           }
            else 
            {
                j++;
@@ -383,6 +415,7 @@ int bc_set_default_options(BSPDContext *ctx) {
     ctx->pCoder->useHW = 0;
     ctx->pCoder->pSize = -1;
     ctx->pCoder->timeout = 15000;
+    ctx->pCoder->samplefmt = AV_SAMPLE_FMT_FLT;
     return BSPD_OP_OK;
 }
 
@@ -663,11 +696,11 @@ int bc_init_coder(BSPDContext *ctx) {
         //ctx->pCoder->pcmSwrCtx = swr_alloc();
         //unity3d pcm is flt fmt
         ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(NULL, och,
-            AV_SAMPLE_FMT_FLT, sr, ich,
+            ctx->pCoder->samplefmt, sr, ich,
             ctx->pCoder->pACodecCtx->sample_fmt, ctx->pCoder->pACodecCtx->sample_rate,
             0, NULL);
         ctx->pCoder->audio_tgt.channels = ch;
-        ctx->pCoder->audio_tgt.fmt = AV_SAMPLE_FMT_FLT;
+        ctx->pCoder->audio_tgt.fmt = ctx->pCoder->samplefmt;
         ctx->pCoder->audio_tgt.freq = sr;
         ctx->pCoder->audio_tgt.channel_layout = och;
 
@@ -864,7 +897,20 @@ int bc_sws_pic(BSPDContext *ctx) {
         }
         if ((ret = av_hwframe_transfer_data(ctx->pCoder->phwImgFrame, ctx->pCoder->pFrame, 0)) < 0)
         {
-            bc_log(ctx, BSPD_LOG_ERROR, "hw transfer data error");
+            bc_log(ctx, BSPD_LOG_ERROR, "hw transfer data error\n");
+            return BSPD_AVLIB_ERROR;
+        }
+        enum AVPixelFormat hwfmt = ctx->pCoder->phwImgFrame->format;
+        if (hwfmt != AV_PIX_FMT_NV12)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "hw format not nv12 error\n");
+            return BSPD_AVLIB_ERROR;
+        }
+        if (ctx->pCoder->pCodecCtx->width != ctx->pCoder->phwImgFrame->linesize[0] ||
+            ctx->pCoder->pCodecCtx->height != ctx->pCoder->phwImgFrame->linesize[1]/2 ||
+            ctx->pCoder->phwImgFrame->format != AV_PIX_FMT_NV12)
+        {
+            bc_log(ctx, BSPD_LOG_ERROR, "at %s hw frame not our expectations, you may be fix this \n",__FUNCTION__);
             return BSPD_AVLIB_ERROR;
         }
 
@@ -1180,6 +1226,21 @@ int bc_log(BSPDContext *ctx,int LEVEL,const char *fmt, ...)
     va_end(args);
    // fd_log(ctx->pCoder->fdcCtx,str);
 
+    if (LEVEL == BSPD_LOG_DEBUG)
+    {
+        printf("%s",str);
+    }
+    else
+    {
+#ifdef _WIN32|_WIN64
+        HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleTextAttribute(handle, FOREGROUND_INTENSITY | FOREGROUND_RED);
+        printf("%s",str);
+        SetConsoleTextAttribute(handle, 0x07);
+#else
+        printf("%s",str);
+#endif
+    }
     if (ctx->logCallback!=NULL)
     {
         ctx->logCallback(str);
