@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "BSPD.h"
+#import "../../../BSPDSource/BSPD/BSPD.h"
 #import <OpenGLES/ES2/gl.h>
 
 
@@ -108,9 +108,11 @@ gl_FragColor = vec4(rgb, 1); \
 -(void)mUpdate{
     glViewport(0, 260, 320, 240);
     long t;
-    int flag =  BSPDGetYUVWithTime(ctx,plane[0],plane[1],plane[2],&t,&t,&t,&t);
-    if(flag!=0)
+    int flag =  BSPDGetRawDataWithTime(ctx, plane[0], plane[1], plane[2], &t, &t);
+    if (flag!=1) {
         return;
+    }
+
     glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
