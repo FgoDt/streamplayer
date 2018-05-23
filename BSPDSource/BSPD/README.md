@@ -2,14 +2,12 @@
 
 a sample lib, decode use [FFmpeg](http://ffmpeg.org/)
 
-❗ now only support decode video 
+理论上来讲只要FFmpeg支持的媒体文件这个库都能使用
 
-video container can be any
-
-### how it work
+### 这个库怎么工作的
 container->sample->h264->yuv420p
 
-### how to use
+### 如何使用这个库
 ```c
     BSPDContext *ctx = BSPDCreateCtx();
 
@@ -29,13 +27,15 @@ container->sample->h264->yuv420p
 ```
 ## build
 
+所有的编译前提是 你需要完成FFmpeg在当前平台的编译，库的解码器支持也是对应你的FFmpeg编译时的选项
+
 ### windows build
-you need visual studio 2017 
+默认使用VS2017来进行编译
 
 ### *nix 
-you need cmake, ffmpeg lib
+在类nix系统下，我们需要Cmake 来编译
 
-change CMakeLists.txt include/link path or copy ffmpeg *inlude and libs file* to *ThirdPartyLibs/FFmpeg*
+修改 CMakeLists.txt 里的 include和link路径，或者拷贝FFmpeg的include和libs文件到项目下的ThirdPartyLibs/FFmpeg/路径
 
 ```shell
 $ mkdir build
@@ -44,14 +44,11 @@ $ cmake ..
 $ make
 ```
 ### android
+在项目的Android目录下有AndroidStudio的项目例子
 
 ### ios
-you need xcode and ffmpeg static lib 
+拷贝FFmpeg的include和libs文件到项目下的ThirdPartyLibs/FFmpeg/路径
 
-copy you ffmpeg lib to *ThirdPartyLibs/FFmpeg/lib*
-
-copy you ffmpeg include to *ThirdPartyLibs/FFmpeg/include*
-
-in path IOS/BSPDSample has a sample example to show how decode video and render yuv data use opengles
+使用xcode打开IOS/BSPDSample 编译可以得到一个简单应用
 
 

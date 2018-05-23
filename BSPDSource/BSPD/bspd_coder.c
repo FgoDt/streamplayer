@@ -2,6 +2,7 @@
 #include <time.h>
 #include <libavutil/time.h>
 #include <libavutil/hwcontext.h>
+#include <libavutil/md5.h>
 #define MAX_PRINT_LEN 2048
 
 //#include "FDCore.h"
@@ -422,6 +423,7 @@ int bc_set_default_options(BSPDContext *ctx) {
 int bc_init_coder(BSPDContext *ctx) {
 
 
+    bc_hash_url("hahahaha",NULL);
 
     bc_log(ctx, BSPD_LOG_DEBUG, "bc init coder\n");
 
@@ -655,7 +657,7 @@ int bc_init_coder(BSPDContext *ctx) {
         }
         if (ctx->pCoder->useHW&&ctx->pCoder->hwInitDone)
         {
-            //Ó²±àÂë»ñµÃµÄÎÆÀíÊÇnv12¸ñÊ½
+            //Ó²ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½nv12ï¿½ï¿½Ê½
             ctx->pCoder->imgSwsCtx = sws_getContext(ctx->pCoder->pCodecCtx->width,
                 ctx->pCoder->pCodecCtx->height, AV_PIX_FMT_NV12,
                 ctx->pCoder->pCodecCtx->width, ctx->pCoder->pCodecCtx->height,
@@ -812,15 +814,16 @@ int bc_get_yuv(BSPDContext *ctx) {
                     ctx->pCoder->pFrameYUV->data, ctx->pCoder->pFrameYUV->linesize);
                 ctx->ysize = ctx->pCoder->pCodecCtx->height * ctx->pCoder->pCodecCtx->width;
             }
-            if (!strcmp(ctx->pCoder->pFormatCtx->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2"))
-            {
+         /*   if (!strcmp(ctx->pCoder->pFormatCtx->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2"))
+            {*/
                 ctx->timeStamp =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->time_base)*ctx->pCoder->pFrame->pts )* 1000;
-            }
+                ctx->vDuration = (av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fVIndex]->time_base)*ctx->pCoder->pFrame->pkt_duration) * 1000;
+    /*        }
             else
             {
                 ctx->timeStamp = ctx->pCoder->pFrame->pts;
-            }
-            ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+                ctx->vDuration = ctx->pCoder->pFrame->pkt_duration;
+            }*/
             av_packet_unref(ctx->pCoder->packet);
             return BSPD_OP_OK;
 
@@ -907,7 +910,6 @@ int bc_sws_pic(BSPDContext *ctx) {
             return BSPD_AVLIB_ERROR;
         }
         if (ctx->pCoder->pCodecCtx->width != ctx->pCoder->phwImgFrame->linesize[0] ||
-            ctx->pCoder->pCodecCtx->height != ctx->pCoder->phwImgFrame->linesize[1]/2 ||
             ctx->pCoder->phwImgFrame->format != AV_PIX_FMT_NV12)
         {
             bc_log(ctx, BSPD_LOG_ERROR, "at %s hw frame not our expectations, you may be fix this \n",__FUNCTION__);
@@ -1020,7 +1022,7 @@ int bc_swr_pcm(BSPDContext *ctx) {
             }
             ctx->pCoder->pSize = av_samples_get_buffer_size(NULL, ctx->pCoder->channles, ret, AV_SAMPLE_FMT_FLT, flag);
             ctx->timeStamp =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->time_base)*ctx->pCoder->pAFrame->pts )* 1000;
-            ctx->vDuration = ctx->pCoder->pAFrame->pkt_duration;
+            ctx->vDuration=(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->time_base)*ctx->pCoder->pAFrame->pkt_duration)* 1000;
             return BSPD_OP_OK;
         }
         
@@ -1320,4 +1322,26 @@ int bc_seek_test(BSPDContext *ctx,int64_t t) {
 int bc_test() {
     BSPDFrameQueue *q = malloc(sizeof(BSPDFrameQueue));
     return BSPD_OP_OK;
+}
+
+int bc_hash_url(const char *url,char *hash ) {
+    struct AVMD5 *md5ctx;
+    md5ctx = av_md5_alloc();
+    av_md5_init(md5ctx);
+    const char *input = url;
+    av_md5_update(md5ctx, input, strlen(input));
+    char *output = (char*)malloc(17);
+    output[16] = '/0';
+    memset(output, 0, 16);
+    av_md5_final(md5ctx, output);
+
+    char *hashstr = (char*)malloc(33);
+    hashstr[0] = '/0';
+
+    for (size_t i = 0; i < 16; i++)
+    {
+        sprintf(hashstr+i*2, "%02x", (uint8_t)(output[i]));
+        printf("%02x", (uint8_t)(output[i]));
+    }
+    printf("\n");
 }

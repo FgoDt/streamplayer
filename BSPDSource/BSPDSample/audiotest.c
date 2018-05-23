@@ -1,7 +1,15 @@
 #include <SDL.h>
 #include <Windows.h>
+#include <direct.h>
+#include <io.h>
+#include <SDL_ttf.h>
+
+#pragma comment(lib,"SDL2_ttf.lib")
 
 SDL_Window *window = NULL;
+TTF_Font *font;
+SDL_Surface *audio_text;
+SDL_Surface *video_text;
 
 
 #define HAVE_GETSYSTEMTIMEASFILETIME 1
@@ -259,13 +267,13 @@ void updateyuv(void *data) {
 
         //show buffer
         SDL_Rect vrect;
-        vrect.x = 0;
+        vrect.x = video_text->clip_rect.w + 1;
         vrect.y = 0;
         vrect.w = ((double)(vqueue->nb) / vqueue->size) * wrect.w/3;
         vrect.h = 20;
         
         SDL_Rect arect;
-        arect.x = 0;
+        arect.x = audio_text->clip_rect.w + 1;
         arect.y = 30;
         arect.w = ((double)(aqueue->nb) / aqueue->size) * wrect.w/3;
         arect.h = 20;
@@ -286,13 +294,22 @@ void updateyuv(void *data) {
         SDL_RenderCopy(render, tex, NULL, &wrect);
         SDL_RenderCopy(render, btex, NULL, &vrect);
         SDL_RenderCopy(render, btex, NULL, &arect);
+        SDL_Texture *audiotex =  SDL_CreateTextureFromSurface(render, audio_text);
+        SDL_Texture *videotex =  SDL_CreateTextureFromSurface(render, video_text);
+        SDL_Rect temprect = { 0,0,
+        audio_text->clip_rect.w
+            ,audio_text->clip_rect.h };
+        SDL_RenderCopy(render, videotex, NULL, &temprect);
+        temprect.y += 30;
+        SDL_RenderCopy(render, audiotex, NULL, &temprect);
         SDL_RenderPresent(render);
-
+        SDL_DestroyTexture(audio_text);
+        SDL_DestroyTexture(video_text);
         //
 
     nup:
         updateclock(&rclock, av_gettime_relative() / 1000);
-        Sleep(13);
+        Sleep(3);
 
     }
 }
@@ -352,10 +369,24 @@ void audio_call(void *udata, Uint8 *stream, int len) {
 
 void audio_main() {
 
-    initclock(&rclock);
-    initclock(&aclock);
-    initclock(&vclock);
+    if (TTF_Init()==-1)
+    {
+        printf("TTF_Init %s\n", TTF_GetError());
+        return 1;
+    }
 
+    font = TTF_OpenFont("font.ttf", 12);
+    if (!font)
+    {
+        printf("ttf_open font error %s\n", TTF_GetError());
+    }
+
+    SDL_Color color = { 255,0,0,255 };
+    //audio_text= TTF_RenderUTF8_Solid(font, "audio buf:", color);
+    audio_text = TTF_RenderUTF8_Solid(font, "audio buf:", color, 100);
+    
+    video_text= TTF_RenderUTF8_Solid(font, "video buf:", color);
+    
 
     HMODULE hdll = NULL;
     hdll = LoadLibraryA("BSPD.dll");
@@ -375,9 +406,9 @@ void audio_main() {
 
     //sdl normal use 2 channels
    // char *input = "http://182.150.11.188/live-tx-hdl.huomaotv.cn/live/6fvPQT.flv";
-    char *input = "http://live-dl-hdl.huomaotv.cn/hmtv/5fILSX?t=1523440252&r=470080342435&stream=5fILSX&rid=oubvc2y3v&token=61ae3eb6f82c5e30bf7026f20bc64d37";
-//    char *input = "f:/sp.mkv";
-    openfunc(ctx, input, "-d -ha   ");
+//    char *input = "http://182.140.217.58/live-tx-hdl.huomaotv.cn/live/7bfjAX31160.flv?t=1523589045&r=606847505217&stream=7bfjAX31160&rid=oubvc2y3v&token=40964db8f1a2bf9d814fa3829acf378b&dispatch_from=ztc10.230.33.209&utime=1523589045113";
+    char *input = "f:/sv.mp4";
+    openfunc(ctx, input, "-d -ha -hw -sr 32000 ");
 
     byte test = 0;
     bgetinfo(ctx, &test);
@@ -389,7 +420,6 @@ void audio_main() {
     w = w <= 0 ? 800 : w;
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     window = SDL_CreateWindow("BSPD_AUDIO_TEST", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w / 2, h / 2, SDL_WINDOW_OPENGL);
-
     render = SDL_CreateRenderer(window, -1, 0);
     tex = SDL_CreateTexture(render, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, w, h);
 
@@ -466,15 +496,16 @@ void audio_main() {
 
         flag = getraw(ctx, ydata, udata, vdata, &pts, &dur);
 
-
+        Sleep(3);
         //video 
         if (flag == 1)
         {
                 printf("vpts:%d\n", pts);
             //updateyuv(tex,render, ydata, udata, vdata,&rect);
-            continue;
+           // continue;
 
         rey:
+
             bdata *data = wpeek_bqueue(vqueue);
             if (data!=NULL)
             {
@@ -500,7 +531,7 @@ void audio_main() {
         else if (flag == 2) {
 
                 printf("Apts:%d\n", pts);
-            continue;
+           // continue;
 
         reya:
             bdata * data = wpeek_bqueue(aqueue);

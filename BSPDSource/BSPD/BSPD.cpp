@@ -385,6 +385,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved){
     return JNI_VERSION_1_4;
 }
 
+//android test
 extern "C"
 JNIEXPORT jstring
 
@@ -392,7 +393,6 @@ JNICALL
 Java_com_rt_1zl_bspd_MainActivity_testBuildLib(
     JNIEnv *env,
     jobject /* this */) {
-   
     return env->NewStringUTF("lib is ok");
 }
 #endif

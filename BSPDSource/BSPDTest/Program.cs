@@ -35,8 +35,30 @@ namespace BSPDTest
             mwindow = SDL.SDL_CreateWindow("test", SDL.SDL_WINDOWPOS_CENTERED, SDL.SDL_WINDOWPOS_CENTERED, w, h, SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL);
             mrender = SDL.SDL_CreateRenderer(mwindow, -1, 0);
         }
+       static byte[] temp = null;
+
+        static void SDLCALL(
+             byte[] userdata,
+            IntPtr stream,
+            int len
+            )
+        {
+            if (temp == null)
+            {
+                temp = new byte[1000];
+                for (int i = 0; i < temp.Length; i++)
+                {
+                    temp[i] = (byte)(255.0 * Math.Sin(i*3.14/1000));
+                }
+            }
+            if (len>0)
+            {
+                SDL.SDL_MixAudio(stream, temp, (uint)len, SDL.SDL_MIX_MAXVOLUME);
+            }
+        }
 
         static SDL.SDL_Event ev;
+        static SDL.SDL_AudioSpec wanted_spec = new SDL.SDL_AudioSpec();
         static void Loop()
         {
             while (SDL.SDL_PollEvent(out ev)>0)
@@ -61,6 +83,14 @@ namespace BSPDTest
                 ydata = new byte[(int)(ysize)];
                 udata = new byte[ysize/4 ];
                 vdata = new byte[ysize/4 ];
+                wanted_spec.channels = 2;
+                wanted_spec.format = SDL.AUDIO_F32;
+                wanted_spec.freq = 44100;
+                wanted_spec.silence = 0;
+                wanted_spec.samples = 1500;
+                wanted_spec.callback = SDLCALL;
+                SDL.SDL_AudioSpec out_spec = new SDL.SDL_AudioSpec();
+                SDL.SDL_OpenAudio(ref wanted_spec, out out_spec);
                 SDL.SDL_PauseAudio(0);
             }
 
@@ -90,7 +120,7 @@ namespace BSPDTest
         {
 
             BSPDMS = new BSPDMediaSource();
-            BSPDMS.OpenMedia(input);
+            BSPDMS.OpenMedia("f:/sv.mp4");
             BSPDMS.GetDecWH(ref w, ref h);
             CreateRender();
             //   System.Threading.Thread.Sleep(10);
