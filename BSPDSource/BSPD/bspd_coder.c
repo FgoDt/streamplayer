@@ -423,7 +423,7 @@ int bc_set_default_options(BSPDContext *ctx) {
 int bc_init_coder(BSPDContext *ctx) {
 
 
-    bc_hash_url("hahahaha",NULL);
+    //bc_hash_url("hahahaha",NULL);
 
     bc_log(ctx, BSPD_LOG_DEBUG, "bc init coder\n");
 
@@ -972,14 +972,7 @@ int bc_swr_pcm(BSPDContext *ctx) {
     if (ctx->pCoder->pcmSwrCtx != NULL)
     {
         int out_count = 0;
-        if (ctx->pCoder->sampleRate > 0 )
-        {
-             out_count = (int64_t)ctx->pCoder->pAFrame->nb_samples*ctx->pCoder->sampleRate / ctx->pCoder->pAFrame->sample_rate + 256;
-        }
-        else
-        {
-            out_count = ctx->pCoder->pAFrame->nb_samples;
-        }
+        out_count = (int64_t)ctx->pCoder->pAFrame->nb_samples* ctx->pCoder->audio_tgt.freq / ctx->pCoder->pAFrame->sample_rate + 256;
 
         if (ctx->pCoder->pAudioBuf == NULL)
         {
@@ -994,7 +987,8 @@ int bc_swr_pcm(BSPDContext *ctx) {
             af->sample_rate != ctx->pCoder->audio_src.freq)
         {
             swr_free(&ctx->pCoder->pcmSwrCtx);
-            ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(NULL, ctx->pCoder->audio_tgt.channel_layout,
+            ctx->pCoder->pcmSwrCtx = swr_alloc_set_opts(NULL, 
+                ctx->pCoder->audio_tgt.channel_layout,
                 ctx->pCoder->audio_tgt.fmt, ctx->pCoder->audio_tgt.freq,
                 af->channel_layout, af->format, af->sample_rate, 0, NULL);
             if (!ctx->pCoder->pcmSwrCtx || swr_init(ctx->pCoder->pcmSwrCtx))
@@ -1010,7 +1004,7 @@ int bc_swr_pcm(BSPDContext *ctx) {
 
         }
 
-        int ret = swr_convert(ctx->pCoder->pcmSwrCtx, &ctx->pCoder->pAudioBuf, out_count,
+       int ret = swr_convert(ctx->pCoder->pcmSwrCtx, &ctx->pCoder->pAudioBuf, out_count,
            (const uint8_t**)ctx->pCoder->pAFrame->extended_data, ctx->pCoder->pAFrame->nb_samples);
 
         if (ret>0)
@@ -1020,7 +1014,7 @@ int bc_swr_pcm(BSPDContext *ctx) {
             {
                 flag = 1;
             }
-            ctx->pCoder->pSize = av_samples_get_buffer_size(NULL, ctx->pCoder->channles, ret, AV_SAMPLE_FMT_FLT, flag);
+            ctx->pCoder->pSize = ret * ctx->pCoder->audio_tgt.channels * av_get_bytes_per_sample(ctx->pCoder->audio_tgt.fmt);
             ctx->timeStamp =(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->time_base)*ctx->pCoder->pAFrame->pts )* 1000;
             ctx->vDuration=(av_q2d(ctx->pCoder->pFormatCtx->streams[ctx->pCoder->fAIndex]->time_base)*ctx->pCoder->pAFrame->pkt_duration)* 1000;
             return BSPD_OP_OK;
@@ -1344,4 +1338,5 @@ int bc_hash_url(const char *url,char *hash ) {
         printf("%02x", (uint8_t)(output[i]));
     }
     printf("\n");
+    return BSPD_ERRO_UNDEFINE;
 }

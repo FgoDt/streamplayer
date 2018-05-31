@@ -16,10 +16,10 @@ cmake_minimum_required(VERSION 3.4.1)
 #这里配置你的FFMPEG库和头文件路径
 #针对不同的平台FFMPEG库也应该不同
 #如果要使用硬件加速你的FFMPEG库应该使用media_codec选项编译
-include_directories("E:\\FFmpegBuild\\a16x86\\include")
-LINK_DIRECTORIES("E:\\FFmpegBuild\\a16x86\\lib")
-#include_directories("E:\\FFmpegBuild\\a19armMC\\include")
-#LINK_DIRECTORIES("E:\\FFmpegBuild\\a19armMC\\lib")
+#include_directories("E:\\FFmpegBuild\\a16x86\\include")
+#LINK_DIRECTORIES("E:\\FFmpegBuild\\a16x86\\lib")
+include_directories("E:\\FFmpegBuild\\a19armMC\\include")
+LINK_DIRECTORIES("E:\\FFmpegBuild\\a19armMC\\lib")
 
 add_library( # Sets the name of the library.
              BSPD

@@ -1,8 +1,12 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <SDL.h>
 #include <Windows.h>
 #include <direct.h>
 #include <io.h>
 #include <SDL_ttf.h>
+#include <stdio.h>
+
 
 #pragma comment(lib,"SDL2_ttf.lib")
 
@@ -408,7 +412,7 @@ void audio_main() {
    // char *input = "http://182.150.11.188/live-tx-hdl.huomaotv.cn/live/6fvPQT.flv";
 //    char *input = "http://182.140.217.58/live-tx-hdl.huomaotv.cn/live/7bfjAX31160.flv?t=1523589045&r=606847505217&stream=7bfjAX31160&rid=oubvc2y3v&token=40964db8f1a2bf9d814fa3829acf378b&dispatch_from=ztc10.230.33.209&utime=1523589045113";
     char *input = "f:/sv.mp4";
-    openfunc(ctx, input, "-d -ha -hw -sr 32000 ");
+    openfunc(ctx, input, "-d -ha  -psize 36 ");
 
     byte test = 0;
     bgetinfo(ctx, &test);
@@ -479,6 +483,8 @@ void audio_main() {
     SDL_CreateThread(updateyuv, "", NULL);
     vclock.start = -1;
     aclock.start = -1;
+    FILE *fp;
+    fp = fopen("d:/test.pcm", "wb");
     while (1)
     {
         while (SDL_PollEvent(&ev)>0)
@@ -496,7 +502,14 @@ void audio_main() {
 
         flag = getraw(ctx, ydata, udata, vdata, &pts, &dur);
 
+        if (flag == 2)
+        {
+            int asize = getpcmlen(udata);
+            fwrite(ydata, 1, asize, fp);
+            printf("Apts:%d dur:%d size: %d \n", pts, dur, asize);
+        }
         Sleep(3);
+        continue;
         //video 
         if (flag == 1)
         {
@@ -518,7 +531,7 @@ void audio_main() {
                 {
                     initmediaclock(&vclock, data->pts);
                 }
-                printf("vpts:%d\n", pts);
+             //   printf("vpts:%d\n", pts);
                 push_bqueue(vqueue);
             }
             else
@@ -530,7 +543,6 @@ void audio_main() {
         //audio 
         else if (flag == 2) {
 
-                printf("Apts:%d\n", pts);
            // continue;
 
         reya:
@@ -538,6 +550,7 @@ void audio_main() {
             if (data!=NULL)
             {
                 data->asize = getpcmlen(udata);
+                printf("Apts:%d dur:%d\n size: %d", pts,dur,data->asize);
                 memcpy(data->ydata, ydata, data->asize);
                 data->dur = dur;
                 data->pts = pts;
@@ -545,7 +558,7 @@ void audio_main() {
                 {
                     initmediaclock(&aclock, data->pts);
                 }
-                printf("Apts:%d\n", pts);
+             //   printf("Apts:%d\n", pts);
                 push_bqueue(aqueue);
             }
             else
